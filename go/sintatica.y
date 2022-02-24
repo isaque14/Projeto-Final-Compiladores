@@ -61,7 +61,7 @@ COMANDO 	: E ';'
 
 			
 E 			
-			//OPERAÇÕES ARTMÉTICAS
+			//OPERADORES ARITMÉTICOS
 			: E '+' E
 			{
 				$$.label = gentempcode();
@@ -121,10 +121,44 @@ E
 					'-' + '-' + $3.label + ";\n";
 			}
 			
+			//OPERADORES RELACIONAIS
+			| TK_ID '<' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " < " + $3.label + ";\n";
+			}
+
+			| TK_ID '>' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " > " + $3.label + ";\n";
+			}
+
+			| TK_ID '<' '=' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " <= " + $4.label + ";\n";
+			}
+
+			| TK_ID '>' '=' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " >= " + $4.label + ";\n";
+			}
+			
 			| TK_ID '=' '=' E
 			{
-				cout << "Reconhece" << endl;
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " == " + $4.label + ";\n";
 			}
+
+			| TK_ID '!' '=' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " != " + $4.label + ";\n";
+			}
+
+
 			| TK_ID '=' E
 			{
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";

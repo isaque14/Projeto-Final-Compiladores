@@ -23,6 +23,7 @@ void yyerror(string);
 %token TK_NUM
 %token TK_MAIN TK_ID TK_TIPO_INT
 %token TK_FUNC
+%token TK_INCREMENT
 %token TK__TIPO_REAL
 %token TK_FIM TK_ERROR
 
@@ -57,7 +58,11 @@ COMANDOS	: COMANDO COMANDOS
 COMANDO 	: E ';'
 			;
 
-E 			: E '+' E
+
+			
+E 			
+			//OPERAÇÕES ARTMÉTICAS
+			: E '+' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
@@ -68,6 +73,36 @@ E 			: E '+' E
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " - " + $3.label + ";\n";
+			}
+			| E '/' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " / " + $3.label + ";\n";
+			}
+			| E '%' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " % " + $3.label + ";\n";
+			}
+			| E '+' '+'
+			{
+				cout << "teste " + $1.traducao + $2.traducao << endl;
+
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $2.traducao + "\t" + $$.label + " = " + 
+					'+' + '+' + ";\n";
+			}
+			| E '-' '-' 
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + "\t" + $$.label + " = " + 
+					"-" + "-" + ";\n";
+			}
+			| TK_ID '=' '=' E
+			{
+				cout << "Reconhece" << endl;
 			}
 			| TK_ID '=' E
 			{

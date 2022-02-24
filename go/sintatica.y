@@ -74,6 +74,14 @@ E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " - " + $3.label + ";\n";
 			}
+
+			| E '*' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " * " + $3.label + ";\n";
+			}
+
 			| E '/' E
 			{
 				$$.label = gentempcode();
@@ -88,18 +96,31 @@ E
 			}
 			| E '+' '+'
 			{
-				cout << "teste " + $1.traducao + $2.traducao << endl;
-
 				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $2.traducao + "\t" + $$.label + " = " + 
+				$$.traducao = $1.traducao + $2.traducao + "\t" + $$.label + " = " + $1.label +
 					'+' + '+' + ";\n";
 			}
 			| E '-' '-' 
 			{
 				$$.label = gentempcode();
-				$$.traducao = $1.traducao + "\t" + $$.label + " = " + 
+				$$.traducao = $1.traducao + "\t" + $$.label + " = " + $1.label + 
 					"-" + "-" + ";\n";
 			}
+
+			| '+' '+' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
+					'+' + '+' + $3.label + ";\n";
+			}
+
+			| '-' '-' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
+					'-' + '-' + $3.label + ";\n";
+			}
+			
 			| TK_ID '=' '=' E
 			{
 				cout << "Reconhece" << endl;

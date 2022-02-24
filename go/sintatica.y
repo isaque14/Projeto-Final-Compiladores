@@ -158,6 +158,24 @@ E
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " != " + $4.label + ";\n";
 			}
 
+			//OPERADORES LÓGICOS
+			| E '&' '&' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " && " + $4.label + ";\n";
+			}
+
+			| E '|' '|' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " || " + $4.label + ";\n";
+			}
+
+			| '!' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $2.traducao + "\t" + " !" + $2.label + ";\n";
+			}
 
 			| TK_ID '=' E
 			{

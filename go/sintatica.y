@@ -2,26 +2,36 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #define YYSTYPE atributos
 
 using namespace std;
 
-int var_temp_qnt;
 string gentempcode();
 
 struct atributos
 {
 	string label;
 	string traducao;
+	string tipo;
 };
+
+typedef struct
+{
+	string nomeVariavel;
+	string tipoVariavel;
+} TIPO_SIMBOLO;
+
+int var_temp_qnt;
+vector<TIPO_SIMBOLO> tabelaSimbolos; 
 
 int yylex(void);
 void yyerror(string);
 %}
 
 %token TK_NUM
-%token TK_MAIN TK_ID TK_TIPO_INT
+%token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL
 %token TK_FUNC
 %token TK_INCREMENT
 %token TK__TIPO_REAL
@@ -56,13 +66,65 @@ COMANDOS	: COMANDO COMANDOS
 			;
 
 COMANDO 	: E ';'
+			
+			| TK_VAR TK_ID TK_TIPO_INT ';'
+			{
+				TIPO_SIMBOLO valor;
+				valor.nomeVariavel = $2.label;
+				valor.tipoVariavel = "int";
+
+				tabelaSimbolos.push_back(valor);
+				
+				//cout << $1.traducao + $2.traducao << endl;
+
+
+				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
+				
+				$$.traducao = "";
+				$$.label = "";
+			}
+
+			| TK_VAR TK_ID TK_TIPO_FLOAT ';'
+			{
+				TIPO_SIMBOLO valor;
+				valor.nomeVariavel = $2.label;
+				valor.tipoVariavel = "float";
+
+				tabelaSimbolos.push_back(valor);
+				
+				//cout << $1.traducao + $2.traducao << endl;
+
+
+				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
+				
+				$$.traducao = "";
+				$$.label = "";
+			}
+
+			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
+			{
+				TIPO_SIMBOLO valor;
+				valor.nomeVariavel = $2.label;
+				valor.tipoVariavel = "bool";
+
+				tabelaSimbolos.push_back(valor);
+				
+				//cout << $1.traducao + $2.traducao << endl;
+
+
+				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
+				
+				$$.traducao = "";
+				$$.label = "";
+			}
+
 			;
 
 
 			
 E 			
 			//OPERADORES ARITMÉTICOS
-			: E '+' E
+			: TK_ID '+' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
@@ -74,14 +136,12 @@ E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " - " + $3.label + ";\n";
 			}
-
 			| E '*' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " * " + $3.label + ";\n";
 			}
-
 			| E '/' E
 			{
 				$$.label = gentempcode();
@@ -94,7 +154,7 @@ E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " % " + $3.label + ";\n";
 			}
-			| E '+' '+'
+			| TK_ID '+' '+'
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $2.traducao + "\t" + $$.label + " = " + $1.label +
@@ -106,120 +166,117 @@ E
 				$$.traducao = $1.traducao + "\t" + $$.label + " = " + $1.label + 
 					"-" + "-" + ";\n";
 			}
-
 			| '+' '+' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
 					'+' + '+' + $3.label + ";\n";
 			}
-
 			| '-' '-' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
 					'-' + '-' + $3.label + ";\n";
 			}
-			
 			//OPERADORES RELACIONAIS
 			| TK_ID '<' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " < " + $3.label + ";\n";
 			}
-
 			| TK_ID '>' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " > " + $3.label + ";\n";
 			}
-
 			| TK_ID '<' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " <= " + $4.label + ";\n";
 			}
-
 			| TK_ID '>' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " >= " + $4.label + ";\n";
 			}
-			
 			| TK_ID '=' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " == " + $4.label + ";\n";
 			}
-
 			| TK_ID '!' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " != " + $4.label + ";\n";
 			}
-
 			//OPERADORES LÓGICOS
 			| E '&' '&' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " && " + $4.label + ";\n";
 			}
-
 			| E '|' '|' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " || " + $4.label + ";\n";
 			}
-
 			| '!' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $2.traducao + "\t" + " !" + $2.label + ";\n";
 			}
-
 			//OPERADORES DE ATRIBUIÇÃO
 			| TK_ID '=' E
 			{
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 			}
-
 			| TK_ID '+' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " += " + $4.label + ";\n";
 			}
-
 			| TK_ID '-' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " -= " + $4.label + ";\n";
 			}
-
 			| TK_ID '*' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " *= " + $4.label + ";\n";
 			}
-
 			| TK_ID '/' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " /= " + $4.label + ";\n";
 			}
-
 			| TK_ID '%' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " %= " + $4.label + ";\n";
 			}
-
 			| TK_NUM
 			{
+				$$.tipo = "int";
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 			| TK_ID
 			{
+				bool encontrei = false;
+				TIPO_SIMBOLO variavel;
+				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					if(tabelaSimbolos[i].nomeVariavel == $1.label){
+						variavel = tabelaSimbolos[i];
+						encontrei = true;
+					} 
+				}
+
+				if(!encontrei){
+					yyerror("variavel não declarada");
+				}
+
+				$$.tipo = variavel.tipoVariavel;
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
@@ -239,7 +296,9 @@ string gentempcode(){
 
 int main( int argc, char* argv[] )
 {
+
 	var_temp_qnt = 0;
+	
 	yyparse();
 
 	return 0;

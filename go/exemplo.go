@@ -1,4 +1,7 @@
 func main()
 {
-	a %= 1;
+	var a bool;
+	
+	
 }
+

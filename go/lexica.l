@@ -23,7 +23,13 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "func"      { return TK_FUNC; }
 
-"int"		{return TK_TIPO_INT;}
+"var"       { return TK_VAR; }
+
+"int"		{ return TK_TIPO_INT; }
+
+"float"		{ return TK_TIPO_FLOAT; }
+
+"bool"		{ return TK_TIPO_BOOL; }
 
 
 [(){}[\];,]	{ return *yytext; }

@@ -31,7 +31,7 @@ void yyerror(string);
 %}
 
 %token TK_NUM
-%token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL
+%token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL TK_TIPO_STRING
 %token TK_FUNC
 %token TK_INCREMENT
 %token TK__TIPO_REAL
@@ -101,6 +101,18 @@ COMANDO 	: E ';'
 				
 				$$.traducao = $2.traducao + "\t" +  "boolean " + $2.label + ";\n";
 				$$.label = "boolean " + $2.label;	
+			}
+
+			| TK_VAR TK_ID TK_TIPO_STRING ';' 
+			{
+				TIPO_SIMBOLO valor;
+				valor.nomeVariavel = $2.label;
+				valor.tipoVariavel = "char";
+
+				tabelaSimbolos.push_back(valor);
+				
+				$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
+				$$.label = "char " + $2.label;	
 			}
 
 			;

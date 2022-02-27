@@ -31,6 +31,8 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "bool"		{ return TK_TIPO_BOOL; }
 
+"string"    { return TK_TIPO_STRING; }
+
 
 [(){}[\];,]	{ return *yytext; }
 

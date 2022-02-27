@@ -1,6 +1,6 @@
 func main()
 {
-	var a bool;
-	a = 3;
+	var a string;
+	a = 7;
 }
 

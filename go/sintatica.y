@@ -74,14 +74,9 @@ COMANDO 	: E ';'
 				valor.tipoVariavel = "int";
 
 				tabelaSimbolos.push_back(valor);
-				
-				//cout << $1.traducao + $2.traducao << endl;
-
-
-				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
-				
-				$$.traducao = "";
-				$$.label = "";
+		
+				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
+				$$.label = "int " + $2.label;
 			}
 
 			| TK_VAR TK_ID TK_TIPO_FLOAT ';'
@@ -92,13 +87,8 @@ COMANDO 	: E ';'
 
 				tabelaSimbolos.push_back(valor);
 				
-				//cout << $1.traducao + $2.traducao << endl;
-
-
-				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
-				
-				$$.traducao = "";
-				$$.label = "";
+				$$.traducao = $2.traducao + "\t" +  "float " + $2.label + ";\n";
+				$$.label = "float " + $2.label;			
 			}
 
 			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
@@ -109,13 +99,8 @@ COMANDO 	: E ';'
 
 				tabelaSimbolos.push_back(valor);
 				
-				//cout << $1.traducao + $2.traducao << endl;
-
-
-				//$$.traducao = $1.traducao + $2.traducao + $3.traducao + "\t" + $1.label + " " + $2.label + " " + $3.label + ";\n";
-				
-				$$.traducao = "";
-				$$.label = "";
+				$$.traducao = $2.traducao + "\t" +  "boolean " + $2.label + ";\n";
+				$$.label = "boolean " + $2.label;	
 			}
 
 			;
@@ -266,7 +251,9 @@ E
 				bool encontrei = false;
 				TIPO_SIMBOLO variavel;
 				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					cout << tabelaSimbolos[i].nomeVariavel << endl;
 					if(tabelaSimbolos[i].nomeVariavel == $1.label){
+						cout << tabelaSimbolos[i].nomeVariavel << endl;
 						variavel = tabelaSimbolos[i];
 						encontrei = true;
 					} 

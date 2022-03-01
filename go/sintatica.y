@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stdlib.h>
 #include <vector>
 
 #define YYSTYPE atributos
@@ -9,6 +10,7 @@
 using namespace std;
 
 string gentempcode();
+void print_table();
 
 struct atributos
 {
@@ -73,6 +75,19 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "int";
 
+				bool encontrei = false;
+				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					if(tabelaSimbolos[i].nomeVariavel == $2.label){
+						valor = tabelaSimbolos[i];
+						encontrei = true;
+					}
+				} 
+				
+				if(encontrei){
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					exit(1);
+				}
+				
 				tabelaSimbolos.push_back(valor);
 		
 				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
@@ -85,10 +100,23 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "float";
 
-				tabelaSimbolos.push_back(valor);
+				bool encontrei = false;
+				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					if(tabelaSimbolos[i].nomeVariavel == $2.label){
+						valor = tabelaSimbolos[i];
+						encontrei = true;
+					}
+				} 
 				
+				if(encontrei){
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					exit(1);
+				}
+				
+				tabelaSimbolos.push_back(valor);
+		
 				$$.traducao = $2.traducao + "\t" +  "float " + $2.label + ";\n";
-				$$.label = "float " + $2.label;			
+				$$.label = "float " + $2.label;
 			}
 
 			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
@@ -97,10 +125,23 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "bool";
 
-				tabelaSimbolos.push_back(valor);
+				bool encontrei = false;
+				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					if(tabelaSimbolos[i].nomeVariavel == $2.label){
+						valor = tabelaSimbolos[i];
+						encontrei = true;
+					}
+				} 
 				
-				$$.traducao = $2.traducao + "\t" +  "boolean " + $2.label + ";\n";
-				$$.label = "boolean " + $2.label;	
+				if(encontrei){
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					exit(1);
+				}
+				
+				tabelaSimbolos.push_back(valor);
+		
+				$$.traducao = $2.traducao + "\t" +  "bool " + $2.label + ";\n";
+				$$.label = "bool " + $2.label;
 			}
 
 			| TK_VAR TK_ID TK_TIPO_STRING ';' 
@@ -109,10 +150,23 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "char";
 
-				tabelaSimbolos.push_back(valor);
+				bool encontrei = false;
+				for (int i = 0; i < tabelaSimbolos.size(); i++){
+					if(tabelaSimbolos[i].nomeVariavel == $2.label){
+						valor = tabelaSimbolos[i];
+						encontrei = true;
+					}
+				} 
 				
+				if(encontrei){
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					exit(1);
+				}
+				
+				tabelaSimbolos.push_back(valor);
+		
 				$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
-				$$.label = "char " + $2.label;	
+				$$.label = "char " + $2.label;
 			}
 
 			;
@@ -121,7 +175,7 @@ COMANDO 	: E ';'
 			
 E 			
 			//OPERADORES ARITMÉTICOS
-			: TK_ID '+' E
+			: E '+' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
@@ -263,16 +317,14 @@ E
 				bool encontrei = false;
 				TIPO_SIMBOLO variavel;
 				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					cout << tabelaSimbolos[i].nomeVariavel << endl;
 					if(tabelaSimbolos[i].nomeVariavel == $1.label){
-						cout << tabelaSimbolos[i].nomeVariavel << endl;
 						variavel = tabelaSimbolos[i];
 						encontrei = true;
 					} 
 				}
 
 				if(!encontrei){
-					yyerror("variavel não declarada");
+					yyerror(" erro: a variável '" + $1.label + "' não foi declarada");
 				}
 
 				$$.tipo = variavel.tipoVariavel;
@@ -290,6 +342,13 @@ int yyparse();
 string gentempcode(){
 	var_temp_qnt++;
 	return "t" + std::to_string(var_temp_qnt);
+}
+
+void print_table(){
+	for (int i = 0; i < tabelaSimbolos.size(); i++){
+		
+		cout << i + "- " + tabelaSimbolos[i].nomeVariavel + "\n"<< endl;
+	}
 }
 
 

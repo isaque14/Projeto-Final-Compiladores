@@ -11,6 +11,7 @@ using namespace std;
 
 string gentempcode();
 void print_table();
+bool buscaVariavel(string nomeVariavel);
 
 struct atributos
 {
@@ -74,17 +75,10 @@ COMANDO 	: E ';'
 				TIPO_SIMBOLO valor;
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "int";
-
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == $2.label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
-				
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
+			
 				if(encontrei){
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -100,16 +94,10 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "float";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == $2.label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -125,16 +113,10 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "bool";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == $2.label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -150,16 +132,10 @@ COMANDO 	: E ';'
 				valor.nomeVariavel = $2.label;
 				valor.tipoVariavel = "char";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == $2.label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel); 
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -343,6 +319,16 @@ string gentempcode(){
 	var_temp_qnt++;
 	return "t" + std::to_string(var_temp_qnt);
 }
+
+bool buscaVariavel(string nomeVariavel){
+	for (int i = 0; i < tabelaSimbolos.size(); i++){
+		if(tabelaSimbolos[i].nomeVariavel == nomeVariavel){
+			return true;
+		}
+	}
+	return false;
+}
+
 
 void print_table(){
 	for (int i = 0; i < tabelaSimbolos.size(); i++){

@@ -80,6 +80,7 @@ using namespace std;
 
 string gentempcode();
 void print_table();
+bool buscaVariavel(string nomeVariavel);
 
 struct atributos
 {
@@ -100,7 +101,7 @@ vector<TIPO_SIMBOLO> tabelaSimbolos;
 int yylex(void);
 void yyerror(string);
 
-#line 104 "y.tab.c"
+#line 105 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -554,10 +555,10 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    48,    48,    54,    60,    65,    70,    72,    97,   122,
-     147,   178,   184,   190,   196,   202,   208,   214,   220,   226,
-     233,   238,   243,   248,   253,   258,   264,   269,   274,   280,
-     284,   289,   294,   299,   304,   309,   315
+       0,    49,    49,    55,    61,    66,    71,    73,    91,   110,
+     129,   154,   160,   166,   172,   178,   184,   190,   196,   202,
+     209,   214,   219,   224,   229,   234,   240,   245,   250,   256,
+     260,   265,   270,   275,   280,   285,   291
 };
 #endif
 
@@ -1401,54 +1402,47 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 49 "sintatica.y"
+#line 50 "sintatica.y"
                         {
 				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << yyvsp[0].traducao << "\treturn 0;\n}" << endl; 
 			}
-#line 1409 "y.tab.c"
+#line 1410 "y.tab.c"
     break;
 
   case 3:
-#line 55 "sintatica.y"
+#line 56 "sintatica.y"
                         {
 				yyval.traducao = yyvsp[-1].traducao;
 			}
-#line 1417 "y.tab.c"
+#line 1418 "y.tab.c"
     break;
 
   case 4:
-#line 61 "sintatica.y"
+#line 62 "sintatica.y"
                         {
 				yyval.traducao = yyvsp[-1].traducao + yyvsp[0].traducao;
 			}
-#line 1425 "y.tab.c"
+#line 1426 "y.tab.c"
     break;
 
   case 5:
-#line 65 "sintatica.y"
+#line 66 "sintatica.y"
                         {
 				yyval.traducao + "";
 			}
-#line 1433 "y.tab.c"
+#line 1434 "y.tab.c"
     break;
 
   case 7:
-#line 73 "sintatica.y"
+#line 74 "sintatica.y"
                         {
 				TIPO_SIMBOLO valor;
 				valor.nomeVariavel = yyvsp[-2].label;
 				valor.tipoVariavel = "int";
-
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == yyvsp[-2].label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
-				
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
+			
 				if(encontrei){
-					yyerror("erro: a variavel '" + yyvsp[-2].label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -1457,26 +1451,20 @@ yyreduce:
 				yyval.traducao = yyvsp[-2].traducao + "\t" +  "int " + yyvsp[-2].label + ";\n";
 				yyval.label = "int " + yyvsp[-2].label;
 			}
-#line 1461 "y.tab.c"
+#line 1455 "y.tab.c"
     break;
 
   case 8:
-#line 98 "sintatica.y"
+#line 92 "sintatica.y"
                         {
 				TIPO_SIMBOLO valor;
 				valor.nomeVariavel = yyvsp[-2].label;
 				valor.tipoVariavel = "float";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == yyvsp[-2].label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + yyvsp[-2].label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -1485,26 +1473,20 @@ yyreduce:
 				yyval.traducao = yyvsp[-2].traducao + "\t" +  "float " + yyvsp[-2].label + ";\n";
 				yyval.label = "float " + yyvsp[-2].label;
 			}
-#line 1489 "y.tab.c"
+#line 1477 "y.tab.c"
     break;
 
   case 9:
-#line 123 "sintatica.y"
+#line 111 "sintatica.y"
                         {
 				TIPO_SIMBOLO valor;
 				valor.nomeVariavel = yyvsp[-2].label;
 				valor.tipoVariavel = "bool";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == yyvsp[-2].label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + yyvsp[-2].label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -1513,26 +1495,20 @@ yyreduce:
 				yyval.traducao = yyvsp[-2].traducao + "\t" +  "bool " + yyvsp[-2].label + ";\n";
 				yyval.label = "bool " + yyvsp[-2].label;
 			}
-#line 1517 "y.tab.c"
+#line 1499 "y.tab.c"
     break;
 
   case 10:
-#line 148 "sintatica.y"
+#line 130 "sintatica.y"
                         {
 				TIPO_SIMBOLO valor;
 				valor.nomeVariavel = yyvsp[-2].label;
 				valor.tipoVariavel = "char";
 
-				bool encontrei = false;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == yyvsp[-2].label){
-						valor = tabelaSimbolos[i];
-						encontrei = true;
-					}
-				} 
+				bool encontrei = buscaVariavel(valor.nomeVariavel); 
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + yyvsp[-2].label + "' já foi declarada");
+					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
 					exit(1);
 				}
 				
@@ -1541,245 +1517,245 @@ yyreduce:
 				yyval.traducao = yyvsp[-2].traducao + "\t" +  "char " + yyvsp[-2].label + ";\n";
 				yyval.label = "char " + yyvsp[-2].label;
 			}
-#line 1545 "y.tab.c"
+#line 1521 "y.tab.c"
     break;
 
   case 11:
-#line 179 "sintatica.y"
+#line 155 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyval.label +
 					" = " + yyvsp[-2].label + " + " + yyvsp[0].label + ";\n";
 			}
-#line 1555 "y.tab.c"
+#line 1531 "y.tab.c"
     break;
 
   case 12:
-#line 185 "sintatica.y"
+#line 161 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyval.label +
 					" = " + yyvsp[-2].label + " - " + yyvsp[0].label + ";\n";
 			}
-#line 1565 "y.tab.c"
+#line 1541 "y.tab.c"
     break;
 
   case 13:
-#line 191 "sintatica.y"
+#line 167 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyval.label +
 					" = " + yyvsp[-2].label + " * " + yyvsp[0].label + ";\n";
 			}
-#line 1575 "y.tab.c"
+#line 1551 "y.tab.c"
     break;
 
   case 14:
-#line 197 "sintatica.y"
+#line 173 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyval.label +
 					" = " + yyvsp[-2].label + " / " + yyvsp[0].label + ";\n";
 			}
-#line 1585 "y.tab.c"
+#line 1561 "y.tab.c"
     break;
 
   case 15:
-#line 203 "sintatica.y"
+#line 179 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyval.label +
 					" = " + yyvsp[-2].label + " % " + yyvsp[0].label + ";\n";
 			}
-#line 1595 "y.tab.c"
+#line 1571 "y.tab.c"
     break;
 
   case 16:
-#line 209 "sintatica.y"
+#line 185 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[-1].traducao + "\t" + yyval.label + " = " + yyvsp[-2].label +
 					'+' + '+' + ";\n";
 			}
-#line 1605 "y.tab.c"
+#line 1581 "y.tab.c"
     break;
 
   case 17:
-#line 215 "sintatica.y"
+#line 191 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + "\t" + yyval.label + " = " + yyvsp[-2].label + 
 					"-" + "-" + ";\n";
 			}
-#line 1615 "y.tab.c"
+#line 1591 "y.tab.c"
     break;
 
   case 18:
-#line 221 "sintatica.y"
+#line 197 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[0].traducao + "\t" + yyval.label + " = " +
 					'+' + '+' + yyvsp[0].label + ";\n";
 			}
-#line 1625 "y.tab.c"
+#line 1601 "y.tab.c"
     break;
 
   case 19:
-#line 227 "sintatica.y"
+#line 203 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[0].traducao + "\t" + yyval.label + " = " +
 					'-' + '-' + yyvsp[0].label + ";\n";
 			}
-#line 1635 "y.tab.c"
+#line 1611 "y.tab.c"
     break;
 
   case 20:
-#line 234 "sintatica.y"
+#line 210 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyvsp[-2].label + " < " + yyvsp[0].label + ";\n";
 			}
-#line 1644 "y.tab.c"
+#line 1620 "y.tab.c"
     break;
 
   case 21:
-#line 239 "sintatica.y"
+#line 215 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyvsp[-2].label + " > " + yyvsp[0].label + ";\n";
 			}
-#line 1653 "y.tab.c"
+#line 1629 "y.tab.c"
     break;
 
   case 22:
-#line 244 "sintatica.y"
+#line 220 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " <= " + yyvsp[0].label + ";\n";
 			}
-#line 1662 "y.tab.c"
+#line 1638 "y.tab.c"
     break;
 
   case 23:
-#line 249 "sintatica.y"
+#line 225 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " >= " + yyvsp[0].label + ";\n";
 			}
-#line 1671 "y.tab.c"
+#line 1647 "y.tab.c"
     break;
 
   case 24:
-#line 254 "sintatica.y"
+#line 230 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " == " + yyvsp[0].label + ";\n";
 			}
-#line 1680 "y.tab.c"
+#line 1656 "y.tab.c"
     break;
 
   case 25:
-#line 259 "sintatica.y"
+#line 235 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " != " + yyvsp[0].label + ";\n";
 			}
-#line 1689 "y.tab.c"
+#line 1665 "y.tab.c"
     break;
 
   case 26:
-#line 265 "sintatica.y"
+#line 241 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " && " + yyvsp[0].label + ";\n";
 			}
-#line 1698 "y.tab.c"
+#line 1674 "y.tab.c"
     break;
 
   case 27:
-#line 270 "sintatica.y"
+#line 246 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " || " + yyvsp[0].label + ";\n";
 			}
-#line 1707 "y.tab.c"
+#line 1683 "y.tab.c"
     break;
 
   case 28:
-#line 275 "sintatica.y"
+#line 251 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[0].traducao + "\t" + " !" + yyvsp[0].label + ";\n";
 			}
-#line 1716 "y.tab.c"
+#line 1692 "y.tab.c"
     break;
 
   case 29:
-#line 281 "sintatica.y"
+#line 257 "sintatica.y"
                         {
 				yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyvsp[-2].label + " = " + yyvsp[0].label + ";\n";
 			}
-#line 1724 "y.tab.c"
+#line 1700 "y.tab.c"
     break;
 
   case 30:
-#line 285 "sintatica.y"
+#line 261 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " += " + yyvsp[0].label + ";\n";
 			}
-#line 1733 "y.tab.c"
+#line 1709 "y.tab.c"
     break;
 
   case 31:
-#line 290 "sintatica.y"
+#line 266 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " -= " + yyvsp[0].label + ";\n";
 			}
-#line 1742 "y.tab.c"
+#line 1718 "y.tab.c"
     break;
 
   case 32:
-#line 295 "sintatica.y"
+#line 271 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " *= " + yyvsp[0].label + ";\n";
 			}
-#line 1751 "y.tab.c"
+#line 1727 "y.tab.c"
     break;
 
   case 33:
-#line 300 "sintatica.y"
+#line 276 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " /= " + yyvsp[0].label + ";\n";
 			}
-#line 1760 "y.tab.c"
+#line 1736 "y.tab.c"
     break;
 
   case 34:
-#line 305 "sintatica.y"
+#line 281 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " %= " + yyvsp[0].label + ";\n";
 			}
-#line 1769 "y.tab.c"
+#line 1745 "y.tab.c"
     break;
 
   case 35:
-#line 310 "sintatica.y"
+#line 286 "sintatica.y"
                         {
 				yyval.tipo = "int";
 				yyval.label = gentempcode();
 				yyval.traducao = "\t" + yyval.label + " = " + yyvsp[0].label + ";\n";
 			}
-#line 1779 "y.tab.c"
+#line 1755 "y.tab.c"
     break;
 
   case 36:
-#line 316 "sintatica.y"
+#line 292 "sintatica.y"
                         {
 				bool encontrei = false;
 				TIPO_SIMBOLO variavel;
@@ -1798,11 +1774,11 @@ yyreduce:
 				yyval.label = gentempcode();
 				yyval.traducao = "\t" + yyval.label + " = " + yyvsp[0].label + ";\n";
 			}
-#line 1802 "y.tab.c"
+#line 1778 "y.tab.c"
     break;
 
 
-#line 1806 "y.tab.c"
+#line 1782 "y.tab.c"
 
       default: break;
     }
@@ -2034,7 +2010,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 336 "sintatica.y"
+#line 312 "sintatica.y"
 
 
 #include "lex.yy.c"
@@ -2045,6 +2021,16 @@ string gentempcode(){
 	var_temp_qnt++;
 	return "t" + std::to_string(var_temp_qnt);
 }
+
+bool buscaVariavel(string nomeVariavel){
+	for (int i = 0; i < tabelaSimbolos.size(); i++){
+		if(tabelaSimbolos[i].nomeVariavel == nomeVariavel){
+			return true;
+		}
+	}
+	return false;
+}
+
 
 void print_table(){
 	for (int i = 0; i < tabelaSimbolos.size(); i++){

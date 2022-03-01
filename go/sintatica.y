@@ -9,11 +9,6 @@
 
 using namespace std;
 
-string gentempcode();
-void print_table();
-bool buscaVariavel(string nomeVariavel);
-void addSimbolo(string nome, string tipo);
-
 struct atributos
 {
 	string label;
@@ -30,6 +25,15 @@ typedef struct
 
 int var_temp_qnt;
 vector<TIPO_SIMBOLO> tabelaSimbolos; 
+
+
+string gentempcode();
+void print_table();
+bool buscaVariavel(string nomeVariavel);
+void addSimbolo(string nome, string tipo);
+TIPO_SIMBOLO getSimbolo(string variavel);
+TIPO_SIMBOLO *casting(TIPO_SIMBOLO *variavel, string tipo1, string tipo2);
+
 
 int yylex(void);
 void yyerror(string);
@@ -140,10 +144,25 @@ E
 			//OPERADORES ARITMÉTICOS
 			: E '+' E
 			{
+
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " + " + $3.label + ";\n";
 			}
+
+			| TK_ID '+' TK_ID
+			{
+				TIPO_SIMBOLO var1 = getSimbolo($1.label);
+				TIPO_SIMBOLO var2 = getSimbolo($3.label);
+
+				cout << "var1 = " + var1.tipoVariavel + " " + var1.nomeVariavel << endl;
+				cout << "var2 = " + var2.tipoVariavel + " " + var2.nomeVariavel << endl;
+
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " + " + $3.label + ";\n";
+			}
+
 			| E '-' E
 			{
 				$$.label = gentempcode();
@@ -324,11 +343,11 @@ bool buscaVariavel(string nomeVariavel){
 	return false;
 }
 
-
-void print_table(){
+TIPO_SIMBOLO getSimbolo(string variavel)
+{
 	for (int i = 0; i < tabelaSimbolos.size(); i++){
-		
-		cout << i + "- " + tabelaSimbolos[i].nomeVariavel + "\n"<< endl;
+		if(tabelaSimbolos[i].nomeVariavel == variavel)
+			return tabelaSimbolos[i];					
 	}
 }
 

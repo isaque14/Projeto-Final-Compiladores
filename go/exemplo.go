@@ -1,7 +1,8 @@
 func main()
 {
-	var a string;
-	var b string;
+	var a int;
+	var b int;
 
+	a+b;
 }
 

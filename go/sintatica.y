@@ -12,12 +12,14 @@ using namespace std;
 string gentempcode();
 void print_table();
 bool buscaVariavel(string nomeVariavel);
+void addSimbolo(string nome, string tipo);
 
 struct atributos
 {
 	string label;
 	string traducao;
 	string tipo;
+	string conteudo;
 };
 
 typedef struct
@@ -72,17 +74,14 @@ COMANDO 	: E ';'
 			
 			| TK_VAR TK_ID TK_TIPO_INT ';'
 			{
-				TIPO_SIMBOLO valor;
-				valor.nomeVariavel = $2.label;
-				valor.tipoVariavel = "int";
-				bool encontrei = buscaVariavel(valor.nomeVariavel);
+				bool encontrei = buscaVariavel($2.label);
 			
 				if(encontrei){
-					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 					exit(1);
 				}
 				
-				tabelaSimbolos.push_back(valor);
+				addSimbolo($2.label, "int");
 		
 				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
 				$$.label = "int " + $2.label;
@@ -90,18 +89,14 @@ COMANDO 	: E ';'
 
 			| TK_VAR TK_ID TK_TIPO_FLOAT ';'
 			{
-				TIPO_SIMBOLO valor;
-				valor.nomeVariavel = $2.label;
-				valor.tipoVariavel = "float";
-
-				bool encontrei = buscaVariavel(valor.nomeVariavel);
+				bool encontrei = buscaVariavel($2.label);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 					exit(1);
 				}
 				
-				tabelaSimbolos.push_back(valor);
+				addSimbolo($2.label, "float");
 		
 				$$.traducao = $2.traducao + "\t" +  "float " + $2.label + ";\n";
 				$$.label = "float " + $2.label;
@@ -109,18 +104,14 @@ COMANDO 	: E ';'
 
 			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
 			{
-				TIPO_SIMBOLO valor;
-				valor.nomeVariavel = $2.label;
-				valor.tipoVariavel = "bool";
-
-				bool encontrei = buscaVariavel(valor.nomeVariavel);
+				bool encontrei = buscaVariavel($2.label);
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 					exit(1);
 				}
 				
-				tabelaSimbolos.push_back(valor);
+				addSimbolo($2.label, "bool");
 		
 				$$.traducao = $2.traducao + "\t" +  "bool " + $2.label + ";\n";
 				$$.label = "bool " + $2.label;
@@ -128,18 +119,14 @@ COMANDO 	: E ';'
 
 			| TK_VAR TK_ID TK_TIPO_STRING ';' 
 			{
-				TIPO_SIMBOLO valor;
-				valor.nomeVariavel = $2.label;
-				valor.tipoVariavel = "char";
-
-				bool encontrei = buscaVariavel(valor.nomeVariavel); 
+				bool encontrei = buscaVariavel($2.label); 
 				
 				if(encontrei){
-					yyerror("erro: a variavel '" + valor.nomeVariavel + "' já foi declarada");
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 					exit(1);
 				}
 				
-				tabelaSimbolos.push_back(valor);
+				addSimbolo($2.label, "string");
 		
 				$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
 				$$.label = "char " + $2.label;
@@ -318,6 +305,14 @@ int yyparse();
 string gentempcode(){
 	var_temp_qnt++;
 	return "t" + std::to_string(var_temp_qnt);
+}
+
+void addSimbolo(string nome, string tipo){
+	TIPO_SIMBOLO valor;
+	valor.nomeVariavel = nome;
+	valor.tipoVariavel = tipo;
+
+	tabelaSimbolos.push_back(valor);					
 }
 
 bool buscaVariavel(string nomeVariavel){

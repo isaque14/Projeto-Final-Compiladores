@@ -32,7 +32,8 @@ void print_table();
 bool buscaVariavel(string nomeVariavel);
 void addSimbolo(string nome, string tipo);
 TIPO_SIMBOLO getSimbolo(string variavel);
-TIPO_SIMBOLO *casting(TIPO_SIMBOLO *variavel, string tipo1, string tipo2);
+string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2);
+bool comparaTipo(string tipo1, string tipo2);
 
 
 int yylex(void);
@@ -155,12 +156,11 @@ E
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				TIPO_SIMBOLO var2 = getSimbolo($3.label);
 
-				cout << "var1 = " + var1.tipoVariavel + " " + var1.nomeVariavel << endl;
-				cout << "var2 = " + var2.tipoVariavel + " " + var2.nomeVariavel << endl;
+				string result = cast(var1, var2);
 
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
-					" = " + $1.label + " + " + $3.label + ";\n";
+					" = " + result + " + " + $3.label + ";\n";
 			}
 
 			| E '-' E
@@ -259,9 +259,17 @@ E
 				$$.traducao = $2.traducao + "\t" + " !" + $2.label + ";\n";
 			}
 			//OPERADORES DE ATRIBUIÇÃO
-			| TK_ID '=' E
+			| TK_ID '=' TK_ID
 			{
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				TIPO_SIMBOLO var1 = getSimbolo($1.label);
+				TIPO_SIMBOLO var2 = getSimbolo($3.label);
+
+				bool validador = comparaTipo(var1.tipoVariavel, var2.tipoVariavel);
+				if (validador)
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				
+				else
+					yyerror("erro: atribuição inválida");
 			}
 			| TK_ID '+' '=' E
 			{
@@ -349,6 +357,23 @@ TIPO_SIMBOLO getSimbolo(string variavel)
 		if(tabelaSimbolos[i].nomeVariavel == variavel)
 			return tabelaSimbolos[i];					
 	}
+}
+
+string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
+	if (var1.tipoVariavel == var2.tipoVariavel) return var1.nomeVariavel;
+	
+	else if (var1.tipoVariavel == "int" && var2.tipoVariavel == "float" 
+			|| var1.tipoVariavel == "float" && var2.tipoVariavel == "int")
+	{
+		return "(float) " + var1.nomeVariavel;
+	}
+	else yyerror("erro: Casting inválido");
+}
+
+bool comparaTipo(string tipo1, string tipo2){
+	if (tipo1 == tipo2) return true;
+
+	return false;
 }
 
 

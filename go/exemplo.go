@@ -1,7 +1,7 @@
 func main()
 {
-	var a bool;
-	var b int;
+	var a string;
+	var b bool;
 
 	b = a+b;
 	

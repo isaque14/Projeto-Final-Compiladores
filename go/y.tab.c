@@ -565,7 +565,7 @@ static const yytype_int16 yyrline[] =
        0,    56,    56,    62,    68,    73,    78,    80,    95,   110,
      125,   146,   154,   166,   172,   178,   184,   190,   196,   202,
      208,   215,   220,   225,   230,   235,   240,   246,   251,   256,
-     262,   274,   279,   284,   289,   294,   299,   305
+     262,   276,   281,   286,   291,   296,   301,   307
 };
 #endif
 
@@ -1707,69 +1707,71 @@ yyreduce:
 				if (validador)
 					yyval.traducao = yyvsp[-2].traducao + yyvsp[0].traducao + "\t" + yyvsp[-2].label + " = " + yyvsp[0].label + ";\n";
 				
-				else
+				else{
 					yyerror("erro: atribuição inválida");
+					exit(1);
+				}
 			}
-#line 1714 "y.tab.c"
+#line 1716 "y.tab.c"
     break;
 
   case 31:
-#line 275 "sintatica.y"
+#line 277 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " += " + yyvsp[0].label + ";\n";
 			}
-#line 1723 "y.tab.c"
+#line 1725 "y.tab.c"
     break;
 
   case 32:
-#line 280 "sintatica.y"
+#line 282 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " -= " + yyvsp[0].label + ";\n";
 			}
-#line 1732 "y.tab.c"
+#line 1734 "y.tab.c"
     break;
 
   case 33:
-#line 285 "sintatica.y"
+#line 287 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " *= " + yyvsp[0].label + ";\n";
 			}
-#line 1741 "y.tab.c"
+#line 1743 "y.tab.c"
     break;
 
   case 34:
-#line 290 "sintatica.y"
+#line 292 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " /= " + yyvsp[0].label + ";\n";
 			}
-#line 1750 "y.tab.c"
+#line 1752 "y.tab.c"
     break;
 
   case 35:
-#line 295 "sintatica.y"
+#line 297 "sintatica.y"
                         {
 				yyval.label = gentempcode();
 				yyval.traducao = yyvsp[-3].traducao + yyvsp[0].traducao + "\t" + yyvsp[-3].label + " %= " + yyvsp[0].label + ";\n";
 			}
-#line 1759 "y.tab.c"
+#line 1761 "y.tab.c"
     break;
 
   case 36:
-#line 300 "sintatica.y"
+#line 302 "sintatica.y"
                         {
 				yyval.tipo = "int";
 				yyval.label = gentempcode();
 				yyval.traducao = "\t" + yyval.label + " = " + yyvsp[0].label + ";\n";
 			}
-#line 1769 "y.tab.c"
+#line 1771 "y.tab.c"
     break;
 
   case 37:
-#line 306 "sintatica.y"
+#line 308 "sintatica.y"
                         {
 				bool encontrei = false;
 				TIPO_SIMBOLO variavel;
@@ -1788,11 +1790,11 @@ yyreduce:
 				yyval.label = gentempcode();
 				yyval.traducao = "\t" + yyval.label + " = " + yyvsp[0].label + ";\n";
 			}
-#line 1792 "y.tab.c"
+#line 1794 "y.tab.c"
     break;
 
 
-#line 1796 "y.tab.c"
+#line 1798 "y.tab.c"
 
       default: break;
     }
@@ -2024,7 +2026,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 326 "sintatica.y"
+#line 328 "sintatica.y"
 
 
 #include "lex.yy.c"

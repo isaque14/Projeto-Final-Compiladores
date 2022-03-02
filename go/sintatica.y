@@ -268,8 +268,10 @@ E
 				if (validador)
 					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 				
-				else
+				else{
 					yyerror("erro: atribuição inválida");
+					exit(1);
+				}
 			}
 			| TK_ID '+' '=' E
 			{

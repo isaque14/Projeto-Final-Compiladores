@@ -1,9 +1,9 @@
 func main()
 {
-	var a string;
+	var a int;
 	var b bool;
 
-	b = a+b;
+	b = float(a);
 	
 }
 

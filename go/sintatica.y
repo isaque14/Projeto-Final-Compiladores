@@ -323,6 +323,27 @@ E
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
+
+			//Conversão Explicita
+			| TK_TIPO_FLOAT '(' TK_ID ')' 
+			{
+				$$.label = gentempcode();
+				$$.traducao = "\t" + $$.label + " = " + "(float) " + $3.label + ";\n";   
+			}
+
+			| TK_ID '=' TK_TIPO_FLOAT '(' TK_ID ')'
+			{
+				TIPO_SIMBOLO var1 = getSimbolo($1.label);
+
+				bool validador = comparaTipo(var1.tipoVariavel, "float");
+				if (validador)
+					$$.traducao = "\t" + $1.label + " = "+ "(float) " + $5.label + ";\n";
+				
+				else{
+					yyerror("erro: atribuição inválida");
+					exit(1);
+				}
+			}
 			;
 
 %%
@@ -361,6 +382,7 @@ TIPO_SIMBOLO getSimbolo(string variavel)
 	}
 }
 
+//Conversão implícita
 string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
 	if (var1.tipoVariavel == var2.tipoVariavel) return var1.nomeVariavel;
 	

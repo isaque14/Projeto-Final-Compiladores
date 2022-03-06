@@ -50,34 +50,40 @@ extern int yydebug;
   enum yytokentype
   {
     TK_NUM = 258,
-    TK_MAIN = 259,
-    TK_ID = 260,
-    TK_VAR = 261,
-    TK_TIPO_INT = 262,
-    TK_TIPO_FLOAT = 263,
-    TK_TIPO_BOOL = 264,
-    TK_TIPO_STRING = 265,
-    TK_FUNC = 266,
-    TK_INCREMENT = 267,
-    TK__TIPO_REAL = 268,
-    TK_FIM = 269,
-    TK_ERROR = 270
+    TK_CHAR = 259,
+    TK_REAL = 260,
+    TK_MAIN = 261,
+    TK_ID = 262,
+    TK_VAR = 263,
+    TK_TIPO_INT = 264,
+    TK_TIPO_FLOAT = 265,
+    TK_TIPO_BOOL = 266,
+    TK_TIPO_CHAR = 267,
+    TK_FUNC = 268,
+    TK_INCREMENT = 269,
+    TK_FIM = 270,
+    TK_ERROR = 271,
+    TK_TRUE = 272,
+    TK_FALSE = 273
   };
 #endif
 /* Tokens.  */
 #define TK_NUM 258
-#define TK_MAIN 259
-#define TK_ID 260
-#define TK_VAR 261
-#define TK_TIPO_INT 262
-#define TK_TIPO_FLOAT 263
-#define TK_TIPO_BOOL 264
-#define TK_TIPO_STRING 265
-#define TK_FUNC 266
-#define TK_INCREMENT 267
-#define TK__TIPO_REAL 268
-#define TK_FIM 269
-#define TK_ERROR 270
+#define TK_CHAR 259
+#define TK_REAL 260
+#define TK_MAIN 261
+#define TK_ID 262
+#define TK_VAR 263
+#define TK_TIPO_INT 264
+#define TK_TIPO_FLOAT 265
+#define TK_TIPO_BOOL 266
+#define TK_TIPO_CHAR 267
+#define TK_FUNC 268
+#define TK_INCREMENT 269
+#define TK_FIM 270
+#define TK_ERROR 271
+#define TK_TRUE 272
+#define TK_FALSE 273
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

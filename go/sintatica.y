@@ -23,8 +23,15 @@ typedef struct
 	string tipoVariavel;
 } TIPO_SIMBOLO;
 
+typedef struct
+{
+	int indice;
+	char caracter;
+} TABELA_ASCII;
+
 int var_temp_qnt;
-vector<TIPO_SIMBOLO> tabelaSimbolos; 
+vector<TIPO_SIMBOLO> tabelaSimbolos;
+vector<TABELA_ASCII> table_ascii; 
 
 
 string gentempcode();
@@ -34,13 +41,14 @@ void addSimbolo(string nome, string tipo);
 TIPO_SIMBOLO getSimbolo(string variavel);
 string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2);
 bool comparaTipo(string tipo1, string tipo2);
+void inicializaAscii();
 
 
 int yylex(void);
 void yyerror(string);
 %}
 
-%token TK_NUM TK_CHAR TK_REAL
+%token TK_NUM TK_REAL TK_CARACTER
 %token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL TK_TIPO_CHAR
 %token TK_FUNC
 %token TK_INCREMENT
@@ -201,7 +209,7 @@ COMANDO 	: E ';'
 				$$.conteudo = $5.label;
 			}
 
-			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_CHAR '"' ';' 
+			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_CARACTER '"' ';' 
 			{
 				bool encontrei = buscaVariavel($2.label); 
 				
@@ -248,12 +256,14 @@ E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " - " + $3.label + ";\n";
 			}
+
 			| E '*' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " * " + $3.label + ";\n";
 			}
+
 			| E '/' E
 			{
 				if ($3.conteudo == "0"){
@@ -265,83 +275,99 @@ E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " / " + $3.label + ";\n";
 			}
+
 			| E '%' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
 					" = " + $1.label + " % " + $3.label + ";\n";
 			}
+
 			| TK_ID '+' '+'
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $2.traducao + "\t" + $$.label + " = " + $1.label +
 					'+' + '+' + ";\n";
 			}
+
 			| E '-' '-' 
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + "\t" + $$.label + " = " + $1.label + 
 					"-" + "-" + ";\n";
 			}
+
 			| '+' '+' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
 					'+' + '+' + $3.label + ";\n";
 			}
+
 			| '-' '-' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " +
 					'-' + '-' + $3.label + ";\n";
 			}
+
 			//OPERADORES RELACIONAIS
 			| TK_ID '<' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " < " + $3.label + ";\n";
 			}
+
 			| TK_ID '>' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " > " + $3.label + ";\n";
 			}
+
 			| TK_ID '<' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " <= " + $4.label + ";\n";
 			}
+
 			| TK_ID '>' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " >= " + $4.label + ";\n";
 			}
+
 			| TK_ID '=' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " == " + $4.label + ";\n";
 			}
+
 			| TK_ID '!' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " != " + $4.label + ";\n";
 			}
+
 			//OPERADORES LÓGICOS
 			| E '&' '&' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " && " + $4.label + ";\n";
 			}
+
 			| E '|' '|' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " || " + $4.label + ";\n";
 			}
+
 			| '!' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $2.traducao + "\t" + " !" + $2.label + ";\n";
 			}
+
+
 			//OPERADORES DE ATRIBUIÇÃO
 			| TK_ID '=' TK_ID
 			{
@@ -417,24 +443,25 @@ E
 					exit(1);
 				}
 			}
-
-
 			
 			| TK_ID '+' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " += " + $4.label + ";\n";
 			}
+
 			| TK_ID '-' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " -= " + $4.label + ";\n";
 			}
+
 			| TK_ID '*' '=' E
 			{
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " *= " + $4.label + ";\n";
 			}
+
 			| TK_ID '/' '=' E
 			{
 				if ($4.conteudo == "0"){
@@ -452,6 +479,7 @@ E
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " /= " + $4.label + ";\n";
 			}
+
 			| TK_ID '%' '=' E
 			{
 				$$.label = gentempcode();
@@ -475,7 +503,7 @@ E
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 
-			| '"' TK_CHAR '"'
+			| '"' TK_CARACTER '"'
  			{
 				$$.tipo = "char";
 				$$.label = gentempcode();
@@ -569,6 +597,13 @@ string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
 	
 	else if(var1.tipoVariavel == "float" && var2.tipoVariavel == "int")
 		return "(float) " + var2.nomeVariavel;
+	
+	// else if (var1.tipoVariavel == "int" && var2.tipoVariavel == "char"
+	// 		|| var1.tipoVariavel == "char" && var2.tipoVariavel == "int"){
+				
+	// 		}
+
+
 	else yyerror("erro: Casting inválido");
 }
 
@@ -578,9 +613,23 @@ bool comparaTipo(string tipo1, string tipo2){
 	return false;
 }
 
+void inicializaAscii(){
+	TABELA_ASCII elemento;
+
+	for ( char i = 0; i < 127; i++ ) {
+
+		elemento.indice = i;
+		elemento.caracter = i;
+        
+		table_ascii.push_back(elemento);
+    }
+}
+
 
 int main( int argc, char* argv[] )
 {
+
+	inicializaAscii();
 
 	var_temp_qnt = 0;
 	

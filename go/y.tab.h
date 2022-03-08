@@ -50,8 +50,8 @@ extern int yydebug;
   enum yytokentype
   {
     TK_NUM = 258,
-    TK_CHAR = 259,
-    TK_REAL = 260,
+    TK_REAL = 259,
+    TK_CARACTER = 260,
     TK_MAIN = 261,
     TK_ID = 262,
     TK_VAR = 263,
@@ -69,8 +69,8 @@ extern int yydebug;
 #endif
 /* Tokens.  */
 #define TK_NUM 258
-#define TK_CHAR 259
-#define TK_REAL 260
+#define TK_REAL 259
+#define TK_CARACTER 260
 #define TK_MAIN 261
 #define TK_ID 262
 #define TK_VAR 263

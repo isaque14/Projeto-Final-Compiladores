@@ -21,6 +21,7 @@ typedef struct
 {
 	string nomeVariavel;
 	string tipoVariavel;
+	string value;
 } TIPO_SIMBOLO;
 
 typedef struct
@@ -37,11 +38,12 @@ vector<TABELA_ASCII> table_ascii;
 string gentempcode();
 void print_table();
 bool buscaVariavel(string nomeVariavel);
-void addSimbolo(string nome, string tipo);
+void addSimbolo(string nome, string tipo, string valor);
 TIPO_SIMBOLO getSimbolo(string variavel);
 string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2);
 bool comparaTipo(string tipo1, string tipo2);
 void inicializaAscii();
+void print_var();
 
 
 int yylex(void);
@@ -63,7 +65,11 @@ void yyerror(string);
 
 S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << $5.traducao << "\treturn 0;\n}" << endl; 
+				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" <<endl;
+				
+				print_var();
+				
+				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
 			}
 			;
 
@@ -94,9 +100,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "int");
+				addSimbolo($2.label, "int", "0");
 		
-				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
 				$$.label = "int " + $2.label;
 			}
 
@@ -109,9 +115,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "float");
+				addSimbolo($2.label, "float", "0.0");
 		
-				$$.traducao = $2.traducao + "\t" +  "float " + $2.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "float " + $2.label + ";\n";
 				$$.label = "float " + $2.label;
 			}
 
@@ -124,9 +130,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "bool");
+				addSimbolo($2.label, "bool", "0");
 		
-				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "int " + $2.label + ";\n";
 				$$.label = "int " + $2.label;
 			}
 
@@ -139,9 +145,10 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "char");
+				
+				addSimbolo($2.label, "char", "\"\"");
 		
-				$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
 				$$.label = "char " + $2.label;
 			}
 
@@ -154,9 +161,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "bool");
+				addSimbolo($2.label, "bool", "1");
 		
-				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = 1" + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = 1" + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 				$$.conteudo = $5.label;
 			}
@@ -170,9 +177,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "bool");
+				addSimbolo($2.label, "bool", "0");
 		
-				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = 0" + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = 0" + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 				$$.conteudo = $5.label;
 			}
@@ -186,9 +193,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "int");
+				addSimbolo($2.label, "int", $5.label);
 		
-				$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = " + $5.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "int " + $2.label + " = " + $5.label + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 				$$.conteudo = $5.label;
 			}
@@ -202,9 +209,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "float");
+				addSimbolo($2.label, "float", $5.label);
 		
-				$$.traducao = $2.traducao + "\t" +  "float " + $2.label + " = " + $5.label + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "float " + $2.label + " = " + $5.label + ";\n";
 				$$.label = "float " + $2.label + " = " + $5.label;
 				$$.conteudo = $5.label;
 			}
@@ -218,9 +225,9 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "char");
+				addSimbolo($2.label, "char", "$6.label");
 		
-				$$.traducao = $2.traducao + "\t" +  "char " + $2.label + " = " + '"' + $6.label + '"' + ";\n";
+				//$$.traducao = $2.traducao + "\t" +  "char " + $2.label + " = " + '"' + $6.label + '"' + ";\n";
 				$$.label = "char " + $2.label + " = " + $6.label;
 				$$.conteudo = $6.label;
 			}
@@ -491,7 +498,8 @@ E
 				$$.tipo = "int";
 				$$.conteudo = $1.label;
 				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
+				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 
 			}
 
@@ -500,7 +508,8 @@ E
 				$$.tipo = "float";
 				$$.conteudo = $1.label;
 				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
 			}
 
 			| '"' TK_CARACTER '"'
@@ -563,12 +572,23 @@ string gentempcode(){
 	return "t" + std::to_string(var_temp_qnt);
 }
 
-void addSimbolo(string nome, string tipo){
-	TIPO_SIMBOLO valor;
-	valor.nomeVariavel = nome;
-	valor.tipoVariavel = tipo;
+void addSimbolo(string nome, string tipo, string valor){
+	TIPO_SIMBOLO var;
+	var.nomeVariavel = nome;
+	var.tipoVariavel = tipo;
+	var.value = valor;
 
-	tabelaSimbolos.push_back(valor);					
+	tabelaSimbolos.push_back(var);					
+}
+
+void print_var(){
+	TIPO_SIMBOLO var;
+	
+	for (int i = 0; i < tabelaSimbolos.size(); i++){
+		var = tabelaSimbolos[i];
+		if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
+		cout << "\t" + var.tipoVariavel + " " + var.nomeVariavel + " = " + var.value + ";\n";
+	}
 }
 
 bool buscaVariavel(string nomeVariavel){
@@ -580,22 +600,25 @@ bool buscaVariavel(string nomeVariavel){
 	return false;
 }
 
-TIPO_SIMBOLO getSimbolo(string variavel)
-{
+TIPO_SIMBOLO getSimbolo(string variavel){
 	for (int i = 0; i < tabelaSimbolos.size(); i++){
 		if(tabelaSimbolos[i].nomeVariavel == variavel)
 			return tabelaSimbolos[i];					
 	}
+	
+	yyerror("erro: variável não declarada");
+	exit(1);
 }
 
 //Conversão implícita
 string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
-	if (var1.tipoVariavel == var2.tipoVariavel) return var1.nomeVariavel;
+	if (var1.tipoVariavel == var2.tipoVariavel) 
+		return var1.nomeVariavel;
 	
-	else if (var1.tipoVariavel == "int" && var2.tipoVariavel == "float")
+	if (var1.tipoVariavel == "int" && var2.tipoVariavel == "float")
 		return "(float) " + var1.nomeVariavel;
 	
-	else if(var1.tipoVariavel == "float" && var2.tipoVariavel == "int")
+	if (var1.tipoVariavel == "float" && var2.tipoVariavel == "int")
 		return "(float) " + var2.nomeVariavel;
 	
 	// else if (var1.tipoVariavel == "int" && var2.tipoVariavel == "char"
@@ -604,7 +627,8 @@ string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
 	// 		}
 
 
-	else yyerror("erro: Casting inválido");
+	yyerror("erro: Casting inválido");
+	exit(1);
 }
 
 bool comparaTipo(string tipo1, string tipo2){

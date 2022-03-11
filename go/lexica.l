@@ -6,13 +6,13 @@
 ESPACO [ \t]
 DIGITO [0-9]
 LETRA [A-Za-z_]
-SIMBOLO [ -_]
+SIMBOLO [ -/:-@[-`{-_]
 
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 ID {LETRA}({LETRA}|{NUM})*
-CARACTER {SIMBOLO}
+CARACTER {LETRA}|{NUM}
 
 %%
 

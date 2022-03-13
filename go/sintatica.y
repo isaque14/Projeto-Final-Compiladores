@@ -27,7 +27,7 @@ typedef struct
 typedef struct
 {
 	int indice;
-	char caracter;
+	string caracter;
 } TABELA_ASCII;
 
 int var_temp_qnt;
@@ -50,7 +50,7 @@ int yylex(void);
 void yyerror(string);
 %}
 
-%token TK_NUM TK_REAL TK_CARACTER
+%token TK_NUM TK_REAL TK_CHAR TK_SIMBOLO TK_CARACTER
 %token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL TK_TIPO_CHAR
 %token TK_FUNC
 %token TK_INCREMENT
@@ -146,7 +146,7 @@ COMANDO 	: E ';'
 				}
 				
 				
-				addSimbolo($2.label, "char", "\"\"");
+				addSimbolo($2.label, "char", "\0");
 		
 				//$$.traducao = $2.traducao + "\t" +  "char " + $2.label + ";\n";
 				$$.label = "char " + $2.label;
@@ -216,7 +216,29 @@ COMANDO 	: E ';'
 				$$.conteudo = $5.label;
 			}
 
-			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_CARACTER '"' ';' 
+			//CHAR
+			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_ID '"' ';' 
+			{
+
+				if ($6.label.size() > 1) yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
+
+				bool encontrei = buscaVariavel($2.label); 
+				
+				if(encontrei){
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					exit(1);
+				}
+				
+				addSimbolo($2.label, "char", $6.label);
+		
+				//$$.traducao = $2.traducao + "\t" +  "char " + $2.label + " = " + '"' + $6.label + '"' + ";\n";
+				$$.label = "char " + $2.label + " = " + $6.label;
+				$$.conteudo = $6.label;
+			}
+			;
+
+			//CHAR
+			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_NUM '"' ';' 
 			{
 				bool encontrei = buscaVariavel($2.label); 
 				
@@ -225,13 +247,12 @@ COMANDO 	: E ';'
 					exit(1);
 				}
 				
-				addSimbolo($2.label, "char", "$6.label");
+				addSimbolo($2.label, "char", $6.label);
 		
 				//$$.traducao = $2.traducao + "\t" +  "char " + $2.label + " = " + '"' + $6.label + '"' + ";\n";
 				$$.label = "char " + $2.label + " = " + $6.label;
 				$$.conteudo = $6.label;
 			}
-			;
 
 
 			
@@ -251,6 +272,12 @@ E
 				TIPO_SIMBOLO var2 = getSimbolo($3.label);
 
 				string result = cast(var1, var2);
+
+				// if (var1.tipoVariavel == "char" || var2.tipoVariavel == "char"){
+				// 	$$.label = gentempcode();
+				// 	$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+				// 	" = " + result + " + " + $3.label + ";\n";	
+				// }
 
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
@@ -381,7 +408,7 @@ E
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				TIPO_SIMBOLO var2 = getSimbolo($3.label);
 
-
+				cout << var1.tipoVariavel + " " + var2.tipoVariavel + "\n" << endl;
 
 				bool validador = comparaTipo(var1.tipoVariavel, var2.tipoVariavel);
 
@@ -389,7 +416,6 @@ E
 					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 				
 				else{
-
 					string result = cast(var1, var2);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + result + ";\n";
 				}
@@ -512,12 +538,33 @@ E
 				addSimbolo($$.label, $$.tipo, $$.conteudo);
 			}
 
-			| '"' TK_CARACTER '"'
+			//CHAR
+			| '"' TK_ID '"'
  			{
 				$$.tipo = "char";
 				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + '"' + $2.label + '"' + ";\n";
+				$$.conteudo = $2.label;
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
+				
 			}
+
+			//CHAR
+			| '"' TK_NUM '"'
+ 			{
+				$$.tipo = "char";
+				$$.label = gentempcode();
+				$$.conteudo = $2.label;
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
+			}
+
+			// //CHAR
+			// | '"' TK_CARACTER '"'
+ 			// {
+			// 	$$.tipo = "char";
+			// 	$$.label = gentempcode();
+			// 	$$.conteudo = $2.label;
+			// 	addSimbolo($$.label, $$.tipo, $$.conteudo);
+			// }
 
 			| TK_ID
 			{
@@ -587,6 +634,7 @@ void print_var(){
 	for (int i = 0; i < tabelaSimbolos.size(); i++){
 		var = tabelaSimbolos[i];
 		if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
+		if (var.tipoVariavel == "char") var.value = "\"" + var.value + "\"";
 		cout << "\t" + var.tipoVariavel + " " + var.nomeVariavel + " = " + var.value + ";\n";
 	}
 }
@@ -621,12 +669,21 @@ string cast(TIPO_SIMBOLO var1, TIPO_SIMBOLO var2){
 	if (var1.tipoVariavel == "float" && var2.tipoVariavel == "int")
 		return "(float) " + var2.nomeVariavel;
 	
-	// else if (var1.tipoVariavel == "int" && var2.tipoVariavel == "char"
-	// 		|| var1.tipoVariavel == "char" && var2.tipoVariavel == "int"){
-				
-	// 		}
-
-
+	// char -> int
+	if(var1.tipoVariavel == "int" && var2.tipoVariavel == "char") {
+		for (int i = 0; i < table_ascii.size(); i++){
+			if (table_ascii[i].caracter == var2.value)
+				return  std::to_string(table_ascii[i].indice);
+		}
+	}
+	// int -> char
+	if(var1.tipoVariavel == "char" && var2.tipoVariavel == "int") {
+		for (int i = 0; i < table_ascii.size(); i++){
+			if (std::to_string(table_ascii[i].indice) == var2.value)
+				return "\"" + table_ascii[i].caracter + "\"";
+		}
+	}
+	
 	yyerror("erro: Casting inválido");
 	exit(1);
 }
@@ -640,11 +697,16 @@ bool comparaTipo(string tipo1, string tipo2){
 void inicializaAscii(){
 	TABELA_ASCII elemento;
 
-	for ( char i = 0; i < 127; i++ ) {
+	elemento.indice = 0;
+	elemento.caracter = "\0";
+	table_ascii.push_back(elemento);
+
+	for ( char i = 1; i < 127; i++ ) {
 
 		elemento.indice = i;
 		elemento.caracter = i;
-        
+		// cout << std::to_string(elemento.indice) + " = " + elemento.caracter + "\n"<< endl; 
+
 		table_ascii.push_back(elemento);
     }
 }
@@ -652,6 +714,8 @@ void inicializaAscii(){
 
 int main( int argc, char* argv[] )
 {
+
+	// 123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 
 	inicializaAscii();
 

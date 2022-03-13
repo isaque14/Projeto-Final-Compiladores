@@ -6,13 +6,14 @@
 ESPACO [ \t]
 DIGITO [0-9]
 LETRA [A-Za-z_]
-SIMBOLO [ -/:-@[-`{-_]
+SIMBOLO [:;<=>?@[\]^`{|}~]
 
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
+CHAR ({SIMBOLO}|{DIGITO}|{LETRA})
 ID {LETRA}({LETRA}|{NUM})*
-CARACTER {LETRA}|{NUM}
+CARACTER {SIMBOLO}
 
 %%
 
@@ -50,7 +51,8 @@ CARACTER {LETRA}|{NUM}
 {NUM}		{ yylval.label = yytext; return TK_NUM; }
 {REAL}      { yylval.label = yytext; return TK_REAL; }
 {ID}		{ yylval.label = yytext; return TK_ID; }
-{CARACTER}  { yylval.label = yytext; return TK_CARACTER; }
+{CHAR}      { yylval.label = yytext; return TK_CHAR; }
+{CARACTER}   { yylval.label = yytext; return TK_CARACTER; }
 .			{ *yytext; }
 
 %%

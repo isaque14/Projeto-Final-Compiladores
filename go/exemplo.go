@@ -1,10 +1,6 @@
 func main()
 {
-	9;
+	var txt char = "h1";
 
-	t1 += 2;
-
-	var f float = 2.9;
-	
 }
 

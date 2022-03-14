@@ -65,7 +65,7 @@ void yyerror(string);
 
 S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" <<endl;
+				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\nint main(void)\n{\n" <<endl;
 				
 				print_var();
 				
@@ -220,8 +220,10 @@ COMANDO 	: E ';'
 			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_ID '"' ';' 
 			{
 
-				if ($6.label.size() > 1) yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
-
+				if ($6.label.size() > 1){
+					 yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
+					 exit(1);
+				}
 				bool encontrei = buscaVariavel($2.label); 
 				
 				if(encontrei){
@@ -240,6 +242,10 @@ COMANDO 	: E ';'
 			//CHAR
 			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_NUM '"' ';' 
 			{
+				if ($6.label.size() > 1){
+					yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
+					exit(1);
+				}
 				bool encontrei = buscaVariavel($2.label); 
 				
 				if(encontrei){
@@ -257,13 +263,25 @@ COMANDO 	: E ';'
 
 			
 E 			
-			//OPERADORES ARITMÉTICOS
+			// OPERADORES ARITMÉTICOS
 			: E '+' E
 			{
+				if ($1.tipo == $3.tipo && $1.tipo == "int"){
+					$$.label = gentempcode();
+					$$.tipo = $1.tipo;
+					$$.conteudo = $1.label + " + " + $3.label;
+					addSimbolo($$.label, $$.tipo, "0");
+					$$.traducao = "\t" + $$.label + " = " + $1.label + " + " + $3.label + ";\n";
+ 				}
 
-				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
-					" = " + $1.label + " + " + $3.label + ";\n";
+				if ($1.tipo == $3.tipo && $1.tipo == "float"){
+					$$.label = gentempcode();
+					$$.tipo = $1.tipo;
+					$$.conteudo = $1.label + " + " + $3.label;
+					addSimbolo($$.label, $$.tipo, "0.0");
+					$$.traducao = "\t" + $$.label + " = " + $1.label + " + " + $3.label + ";\n";
+ 				}
+				
 			}
 
 			| TK_ID '+' TK_ID
@@ -271,7 +289,7 @@ E
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				TIPO_SIMBOLO var2 = getSimbolo($3.label);
 
-				string result = cast(var1, var2);
+				// string result = cast(var1, var2);
 
 				// if (var1.tipoVariavel == "char" || var2.tipoVariavel == "char"){
 				// 	$$.label = gentempcode();
@@ -279,9 +297,12 @@ E
 				// 	" = " + result + " + " + $3.label + ";\n";	
 				// }
 
+				// $1.traducao + $3.traducao + 
+
 				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
-					" = " + result + " + " + $3.label + ";\n";
+				addSimbolo($$.label, var1.tipoVariavel, "0");
+				$$.traducao = "\t" + $$.label +
+					" = " + $1.label + " + " + $3.label + ";\n";
 			}
 
 			| E '-' E
@@ -408,13 +429,13 @@ E
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				TIPO_SIMBOLO var2 = getSimbolo($3.label);
 
-				cout << var1.tipoVariavel + " " + var2.tipoVariavel + "\n" << endl;
-
 				bool validador = comparaTipo(var1.tipoVariavel, var2.tipoVariavel);
 
-				if (validador)
-					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
-				
+				if (validador){
+					$$.traducao = "\t" + $1.label + " = " + $3.label + ";\n";
+					cout << "Tipo igual " +$1.label + " " + $3.label << endl;
+				}
+
 				else{
 					string result = cast(var1, var2);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + result + ";\n";
@@ -480,7 +501,8 @@ E
 			| TK_ID '+' '=' E
 			{
 				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " += " + $4.label + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
+				// $$.traducao = $1.traducao + $4.traducao + "\t" + $1.label + " += " + $4.label + ";\n";
 			}
 
 			| TK_ID '-' '=' E
@@ -526,7 +548,6 @@ E
 				$$.label = gentempcode();
 				addSimbolo($$.label, $$.tipo, $$.conteudo);
 				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-
 			}
 
 			| TK_REAL
@@ -544,6 +565,10 @@ E
 				$$.tipo = "char";
 				$$.label = gentempcode();
 				$$.conteudo = $2.label;
+				if ($2.label.size() > 1){
+					yyerror("erro: a variável (char " + $$.label + ") só pode receber um caracter");
+					exit(1);
+				}
 				addSimbolo($$.label, $$.tipo, $$.conteudo);
 				
 			}
@@ -554,6 +579,10 @@ E
 				$$.tipo = "char";
 				$$.label = gentempcode();
 				$$.conteudo = $2.label;
+				if ($2.label.size() > 1){
+					yyerror("erro: a variável (char " + $$.label + ") só pode receber um caracter");
+					exit(1);
+				}
 				addSimbolo($$.label, $$.tipo, $$.conteudo);
 			}
 
@@ -582,8 +611,10 @@ E
 				}
 
 				$$.tipo = variavel.tipoVariavel;
+				$$.conteudo = variavel.value;
 				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.conteudo);
+				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 
 			//Conversão Explicita

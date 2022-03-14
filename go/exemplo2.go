@@ -17,6 +17,19 @@ func main()
 	real1 = float (num3);
 	num1 = txt2;
 	txt2 = num2;
-	
+
+
+	******* Erros********
+	// não aceita variaveis repetidas
+	var a int;
+	var a float;
+
+	// Não aceita divisão por zero 
+	a = num/a;
+	1/0;
+
+	// Não aceita char com mais de um caracter
+	"teste";
+	var a char = "teste";
 }
 

@@ -14,7 +14,7 @@ func main()
 
 	var num3 int = 71;
 	num1 + num3;
-	real1 = float (num3);
+	real1 = float (num3) ;
 	num1 = txt2;
 	txt2 = num2;
 

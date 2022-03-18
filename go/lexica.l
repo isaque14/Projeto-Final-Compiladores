@@ -11,9 +11,9 @@ SIMBOLO [:;<=>?@[\]^`{|}~]
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
-CHAR ({SIMBOLO}|{DIGITO}|{LETRA})
+CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
-CARACTER {SIMBOLO}
+
 
 %%
 
@@ -40,11 +40,29 @@ CARACTER {SIMBOLO}
 "False"     { return TK_FALSE; }
 
 
-[(){}[\];,""]	{ return *yytext; }
+[(){}[\];,]	{ return *yytext; }
 
-[+\-*/%!&|<>""]	{ return *yytext; }
+[+\-*/%!&|<>""'']	{ return *yytext; }
 
-"="         { return '='; }
+
+"="		    { return *yytext; }
+
+">="        { return TK_MAIOR_IGUAL; }
+
+"<="        { return TK_MENOR_IGUAL; }
+
+"=="        { return TK_IGUAL_IGUAL; }
+
+"!="        { return TK_DIFERENTE; }
+
+"++"        { return TK_MAIS_MAIS; }
+
+"--"        { return TK_MENOS_MENOS; }
+
+"||"        { return TK_OU; }
+
+"&&"        { return TK_E; }
+
 
 
 
@@ -52,7 +70,6 @@ CARACTER {SIMBOLO}
 {REAL}      { yylval.label = yytext; return TK_REAL; }
 {ID}		{ yylval.label = yytext; return TK_ID; }
 {CHAR}      { yylval.label = yytext; return TK_CHAR; }
-{CARACTER}   { yylval.label = yytext; return TK_CARACTER; }
 .			{ *yytext; }
 
 %%

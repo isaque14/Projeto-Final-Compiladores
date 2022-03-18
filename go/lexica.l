@@ -11,7 +11,7 @@ SIMBOLO [:;<=>?@[\]^`{|}~]
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
-CHAR \'({LETRA}|{NUM})\'
+CHAR ({LETRA}|{NUM})
 ID {LETRA}({LETRA}|{NUM})*
 
 

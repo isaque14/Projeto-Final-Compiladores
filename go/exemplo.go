@@ -1,6 +1,7 @@
 func main()
 {
-	var f int;
-	var f int;
+	
+	var txt char = "187";
+
 }
 

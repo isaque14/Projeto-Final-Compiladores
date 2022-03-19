@@ -104,7 +104,7 @@ COMANDO 	: E ';'
 				
 				addSimbolo($2.label, "int", temp);
 		
-				$$.traducao = $2.label + $3.label + "\t" + temp + " = 0" + ";\n";
+				$$.traducao = "\t" + temp + " = 0" + ";\n";
 				$$.label = "int " + $2.label;
 			}
 
@@ -184,36 +184,58 @@ COMANDO 	: E ';'
 
 			| TK_VAR TK_ID TK_TIPO_INT '=' E ';' 
 			{
-				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
-
+				
+				bool encontrei = buscaVariavel($2.label); 
+				
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				if($5.tipo != "int") 
-					yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
+				if($5.tipo == "int"){ 
 
-				addSimbolo($2.label, "int", temp);
-		
-				$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
-				$$.label = "int " + $2.label + " = " + $5.label;
+					addSimbolo($2.label, "int", temp);
+			
+					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
+					$$.label = "int " + $2.label + " = " + $5.label;
+				}
+
+				else if ($5.tipo == "float"){
+					addSimbolo($2.label, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+				}
 			}
 
 			| TK_VAR TK_ID TK_TIPO_FLOAT '=' E ';' 
 			{
-				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
-
+				
+				bool encontrei = buscaVariavel($2.label); 
+				
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				if($5.tipo != "int" && $5.tipo != "float") 
-					yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
+				if($5.tipo == "float"){ 
 
-				addSimbolo($2.label, "float", temp);
-		
-				$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
-				$$.label = "float " + $2.label + " = " + $5.label;
+					addSimbolo($2.label, "float", temp);
+			
+					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
+					$$.label = "float " + $2.label + " = " + $5.label;
+				}
+
+				else if ($5.tipo == "int"){
+					addSimbolo($2.label, "float", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "float", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (float) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+				}
 			}
 
 			//CHAR
@@ -595,7 +617,13 @@ E
 					$$.label + " = (float) " + $3.label + ";\n" + "\t" + 
 					var.tempVariavel + " = " + $$.label + ";\n";
 				}
-				else{
+				// else if (var.tipoVariavel == "char" & $3.tipo == "int"){
+				// 	$$label = gentempcode();
+				// 	addSimbolo($$.label, "char", $$.label);
+
+				// }
+
+				else{ 
 					yyerror("Erro: Atribuição inviavel");
 				}
 			}

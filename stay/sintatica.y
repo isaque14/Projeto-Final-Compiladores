@@ -68,7 +68,7 @@ void yyerror(string);
 
 S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador GO*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\nint main(void)\n{\n" <<endl;
+				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\nint main(void)\n{\n" <<endl;
 				
 				print_var();
 				
@@ -104,7 +104,7 @@ COMANDO 	: E ';'
 				
 				addSimbolo($2.label, "int", temp);
 		
-				$$.traducao = "\t" + temp + " = 0" + ";\n";
+				$$.traducao = $2.label + $3.label + "\t" + temp + " = 0" + ";\n";
 				$$.label = "int " + $2.label;
 			}
 
@@ -125,15 +125,15 @@ COMANDO 	: E ';'
 			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
 			{
 				bool encontrei = buscaVariavel($2.label);
-				string temp = gentempcode();
-
+				
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				addSimbolo($2.label, "bool", temp);
+				string temp = gentempcode();
+				addSimbolo($2.label, "int", temp);
 		
-				$$.traducao = "\t" + temp + " = 0" + ";\n";
-				$$.label = "int " + $2.label;
+				$$.traducao = $2.traducao + $3.traducao + "\t" + temp + " = 0" + ";\n";
+				$$.label = temp;
 			}
 
 			| TK_VAR TK_ID TK_TIPO_CHAR ';' 
@@ -158,9 +158,12 @@ COMANDO 	: E ';'
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				addSimbolo($2.label, "bool", temp);
+				// if($5.tipo != "int") 
+				// 	yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
+					
+				addSimbolo($2.label, "int", temp);
 		
-				$$.traducao = "\tint " + temp + " = 1" + ";\n";
+				$$.traducao = "\t" + temp + " = 1" + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 				
 			}
@@ -175,11 +178,11 @@ COMANDO 	: E ';'
 				
 				addSimbolo($2.label, "bool", temp);
 		
-				$$.traducao = "\tint " + temp + " = 0" + ";\n";
+				$$.traducao = "\t" + temp + " = 0" + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 			}
 
-			| TK_VAR TK_ID TK_TIPO_INT '=' TK_NUM ';' 
+			| TK_VAR TK_ID TK_TIPO_INT '=' E ';' 
 			{
 				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
@@ -187,13 +190,16 @@ COMANDO 	: E ';'
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
+				if($5.tipo != "int") 
+					yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
+
 				addSimbolo($2.label, "int", temp);
 		
-				$$.traducao = "\t" + temp + " = " + $5.label + ";\n";
+				$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
 			}
 
-			| TK_VAR TK_ID TK_TIPO_FLOAT '=' TK_REAL ';' 
+			| TK_VAR TK_ID TK_TIPO_FLOAT '=' E ';' 
 			{
 				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
@@ -201,9 +207,12 @@ COMANDO 	: E ';'
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
+				if($5.tipo != "int" && $5.tipo != "float") 
+					yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
+
 				addSimbolo($2.label, "float", temp);
 		
-				$$.traducao = "\t" + temp + " = " + $5.label + ";\n";
+				$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
 				$$.label = "float " + $2.label + " = " + $5.label;
 			}
 
@@ -221,7 +230,7 @@ COMANDO 	: E ';'
 				string temp = gentempcode();
 				addSimbolo($2.label, "char", temp);
 		
-				$$.traducao = "\tchar " + temp + " = " + "'" + $6.label + "'" + ";\n";
+				$$.traducao = "\t" + temp + " = " + "'" + $6.label + "'" + ";\n";
 				$$.label = "char " + $2.label + " = " + $6.label;
 			}
 
@@ -239,7 +248,7 @@ COMANDO 	: E ';'
 				string temp = gentempcode();
 				addSimbolo($2.label, "char", temp);
 		
-				$$.traducao = "\tchar " + temp + " = " + "'" + $6.label + "'" + ";\n";
+				$$.traducao = "\t" + temp + " = " + "'" + $6.label + "'" + ";\n";
 				$$.label = "char " + $2.label + " = " + $6.label;
 			}
 			;
@@ -484,7 +493,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " > " + $3.label + ";\n";
 			}
@@ -493,7 +502,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " < " + $3.label + ";\n";
 			}
@@ -502,7 +511,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
 			}
@@ -511,7 +520,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
 			}
@@ -520,7 +529,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " == " + $3.label + ";\n";
 			}
@@ -530,7 +539,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " != " + $3.label + ";\n";
 			}
@@ -538,23 +547,23 @@ E
 			| E TK_OU E
 			{
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " || " + $3.label + ";\n";
 			}
 
 			| E TK_E E
 			{
+				cout << "Traduções -> " + $1.traducao + $3.traducao << endl;
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " && " + $3.label + ";\n";
+				addSimbolo($$.label, "int", $$.label);
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
 			}
 
 			| '!' E
 			{
 				$$.label = gentempcode();
-				addSimbolo($$.label, "boolean", $$.label);
+				addSimbolo($$.label, "int", $$.label);
 				$$.traducao = $2.traducao + "\t" + 
 				$$.label + " = " + "!" + $2.label + ";\n";
 			}
@@ -596,7 +605,8 @@ E
 			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
 
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
-				$$.traducao = $1.traducao + $2.traducao + "\t" + 
+				$$.label = var1.tempVariavel;
+				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				var1.tempVariavel + " = 1"  + ";\n";
 			}
 
@@ -605,6 +615,7 @@ E
 			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
 
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
+				$$.label = var1.tempVariavel;
 				$$.traducao = $1.traducao + $2.traducao + "\t" + 
 				var1.tempVariavel + " = 0"  + ";\n";
 			}
@@ -627,6 +638,24 @@ E
 				addSimbolo($$.label, $$.tipo, $$.label);
 			}
 
+			| TK_TRUE
+			{
+				$$.tipo = "int";
+				$$.conteudo = "1";
+				$$.label = gentempcode();
+				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.label);
+			}
+
+			| TK_FALSE
+			{
+				$$.tipo = "int";
+				$$.conteudo = "0";
+				$$.label = gentempcode();
+				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.label);
+			}
+
 			// | '\"' TK_CHAR '\"'
 			// {
 			// 	$$.tipo = "char";
@@ -639,6 +668,7 @@ E
 			| '"' TK_ID '"'
  			{
 				$$.tipo = "char";
+				$$.conteudo = $2.label;
 				$$.label = gentempcode();
 
 				if ($2.label.size() > 1)
@@ -652,6 +682,7 @@ E
 			| '"' TK_NUM '"'
  			{
 				$$.tipo = "char";
+				$$.conteudo = '"' + $2.label + '"';
 				$$.label = gentempcode();
 
 				if ($2.label.size() > 1)

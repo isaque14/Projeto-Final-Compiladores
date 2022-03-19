@@ -4,4 +4,4 @@ all:
 		yacc -d sintatica.y
 		g++ -o glf y.tab.c -ll
 
-		./glf < exemplo.go
+		./glf < exemplo.stay

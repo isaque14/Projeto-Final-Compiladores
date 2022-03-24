@@ -208,6 +208,16 @@ COMANDO 	: E ';'
 					$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
 					"\t" + temp + " = " + $$.label + ";\n";
 				}
+
+				else if ($5.tipo == "char"){
+					addSimbolo($2.label, "int", temp);
+					// $$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+				}
 			}
 
 			| TK_VAR TK_ID TK_TIPO_FLOAT '=' E ';' 
@@ -238,40 +248,62 @@ COMANDO 	: E ';'
 				}
 			}
 
-			//CHAR
-			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_ID '"' ';' 
-			{
-				if ($6.label.size() > 1)
-					 yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
-					 
+			| TK_VAR TK_ID TK_TIPO_CHAR '=' E ';' 
+			{	
+				string temp = gentempcode();
+				
 				bool encontrei = buscaVariavel($2.label); 
 				
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				string temp = gentempcode();
-				addSimbolo($2.label, "char", temp);
-		
-				$$.traducao = "\t" + temp + " = " + "'" + $6.label + "'" + ";\n";
-				$$.label = "char " + $2.label + " = " + $6.label;
-			}
+				if($5.tipo == "char"){ 
 
-			//CHAR
-			| TK_VAR TK_ID TK_TIPO_CHAR '=' '"' TK_NUM '"' ';' 
-			{
-				if ($6.label.size() > 1)
-					yyerror("erro: a variável (char " + $2.label + ") só pode receber um caracter");
+					addSimbolo($2.label, "char", temp);
+			
+					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
+					$$.label = "char " + $2.label + " = " + $5.label;
+				}
+
+				else if ($5.tipo == "int"){
+					addSimbolo($2.label, "char", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
-				bool encontrei = buscaVariavel($2.label); 
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+				}
+
+				else if ($5.tipo == "float"){
+					addSimbolo($2.label, "char", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+				}
+
+
+
+
+
+
+
+
+
+
+				// bool encontrei = buscaVariavel($2.label); 
 				
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+				// if(encontrei)
+				// 	yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
-				string temp = gentempcode();
-				addSimbolo($2.label, "char", temp);
+				// string temp = gentempcode();
+				// addSimbolo($2.label, "char", temp);
 		
-				$$.traducao = "\t" + temp + " = " + "'" + $6.label + "'" + ";\n";
-				$$.label = "char " + $2.label + " = " + $6.label;
+				// $$.traducao = "\t" + temp + " = " + "'" + $6.label + "'" + ";\n";
+				// $$.label = "char " + $2.label + " = " + $6.label;
 			}
 			;
 
@@ -617,12 +649,34 @@ E
 					$$.label + " = (float) " + $3.label + ";\n" + "\t" + 
 					var.tempVariavel + " = " + $$.label + ";\n";
 				}
-				// else if (var.tipoVariavel == "char" & $3.tipo == "int"){
-				// 	$$label = gentempcode();
-				// 	addSimbolo($$.label, "char", $$.label);
-
-				// }
-
+				else if (var.tipoVariavel == "char" & $3.tipo == "int"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (char) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "int" & $3.tipo == "char"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (int) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "float" & $3.tipo == "char"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "float", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (float) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "char" & $3.tipo == "float"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (char) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
 				else{ 
 					yyerror("Erro: Atribuição inviavel");
 				}
@@ -684,40 +738,12 @@ E
 				addSimbolo($$.label, $$.tipo, $$.label);
 			}
 
-			// | '\"' TK_CHAR '\"'
-			// {
-			// 	$$.tipo = "char";
-			// 	$$.label = gentempcode();
-			// 	$$.traducao = "\t" + $$.label + " = '" + $2.label + "';\n";
-			// 	addSimbolo($$.label, $$.tipo, $$.label);
-			// }
-
-			//CHAR
-			| '"' TK_ID '"'
- 			{
+			| TK_CHAR
+			{
 				$$.tipo = "char";
-				$$.conteudo = $2.label;
 				$$.label = gentempcode();
-
-				if ($2.label.size() > 1)
-					yyerror("erro: a variável (char " + $$.label + ") só pode receber um caracter");
-			
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 				addSimbolo($$.label, $$.tipo, $$.label);
-				$$.traducao = "\t" + $$.label + " = '" + $2.label + "';\n";
-			}
-
-			//CHAR
-			| '"' TK_NUM '"'
- 			{
-				$$.tipo = "char";
-				$$.conteudo = '"' + $2.label + '"';
-				$$.label = gentempcode();
-
-				if ($2.label.size() > 1)
-					yyerror("erro: a variável (char " + $$.label + ") só pode receber um caracter");
-					
-				addSimbolo($$.label, $$.tipo, $$.label);
-				$$.traducao = "\t" + $$.label + " = '" + $2.label + "';\n";
 			}
 	
 			| TK_ID

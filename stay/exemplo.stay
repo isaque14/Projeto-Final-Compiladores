@@ -1,6 +1,6 @@
 func main()
 {
-	var a float = float (8);
-
+	var i int = 7;
+	var a char = i;
 }
 

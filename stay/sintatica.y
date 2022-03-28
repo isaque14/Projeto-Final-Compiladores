@@ -59,6 +59,7 @@ void yyerror(string);
 %token TK_INCREMENT
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
+%token TK_PRINTLN TK_PRINT
 
 %start S
 
@@ -801,6 +802,22 @@ E
 				
 				else yyerror("operacao invalida");
 			}
+
+			// IO
+			| TK_PRINTLN '(' E ')'
+			{
+				$$.traducao = $3.traducao + "\tcout << " + $3.label + " << endl;\n";
+			}
+			
+			| TK_PRINT '(' E ')'
+			{
+				$$.traducao = $3.traducao + "\tcout << " + $3.label + ";\n";
+			}
+			
+			// | TK_PRINTLN '(' ')'
+			// {
+			// 	$$.traducao = $3.traducao + "\tcout;\n";
+			// }
 			;
 
 %%

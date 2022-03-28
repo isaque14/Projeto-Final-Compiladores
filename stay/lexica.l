@@ -38,6 +38,8 @@ ID {LETRA}({LETRA}|{NUM})*
 "True"      { return TK_TRUE; }
 
 "False"     { return TK_FALSE; }
+"println"   { return TK_PRINTLN; }
+"print"     { return TK_PRINT; }
 
 
 [(){}[\];,]	{ return *yytext; }

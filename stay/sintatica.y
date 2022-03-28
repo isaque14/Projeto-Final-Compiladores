@@ -59,7 +59,7 @@ void yyerror(string);
 %token TK_INCREMENT
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
-%token TK_PRINTLN TK_PRINT
+%token TK_PRINTLN TK_PRINT TK_SCAN
 
 %start S
 
@@ -813,11 +813,16 @@ E
 			{
 				$$.traducao = $3.traducao + "\tcout << " + $3.label + ";\n";
 			}
-			
-			// | TK_PRINTLN '(' ')'
-			// {
-			// 	$$.traducao = $3.traducao + "\tcout;\n";
-			// }
+
+			| TK_SCAN '(' '&' TK_ID ')'
+			{
+				$$.label = gentempcode();
+				$$.tipo = $4.tipo;
+				
+				TIPO_SIMBOLO var = getSimbolo($4.label);
+
+				$$.traducao = "\tcin >> " + var.tempVariavel + ";\n" + $3.traducao; 
+			} 
 			;
 
 %%

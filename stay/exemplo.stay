@@ -1,8 +1,7 @@
 func main()
 {
+	var a string = "oi";
 
-	var a int = 1+7;
-	scan(&a);
-
+	print(a);
 }
 

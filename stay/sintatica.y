@@ -78,6 +78,12 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 				print_var();
 				
 				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
+
+				// for (int i = 0; i < tabelaSimbolos.size(); i++){
+					
+				// 	cout << std::to_string(i) + " = " + tabelaSimbolos[i].nomeVariavel + " / " +tabelaSimbolos[i].tempVariavel + "\t" + tabelaSimbolos[i].tipoVariavel + "\t" + tabelaSimbolos[i].conteudo << endl;
+				// }
+
 			}
 			;
 
@@ -160,12 +166,14 @@ COMANDO 	: E ';'
 				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
 
+				cout << "var = " + $2.label << endl;
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
 				
 				addStr($2.label, "string",  temp, "\0");
-		
-				// $$.traducao = "\t" + temp + " = " + "'" + "\\0" + "'" + ";\n";
+				// $$.traducao = "\tstrcpy(" + temp + ", " + "\\0" + ");\n";
+				$$.label = "\tstrcpy(" + temp + ", " + "\"\\0\"" + ");\n";
+				//  $$.traducao = "\t" + temp + " = " + "'" + "\\0" + "'" + ";\n";
 			}
 
 			| TK_VAR TK_ID TK_TIPO_BOOL '=' TK_TRUE ';' 
@@ -304,17 +312,22 @@ COMANDO 	: E ';'
 				}
 			}
 			
-			| TK_VAR TK_ID TK_TIPO_STRING '=' TK_STRING ';' 
+			| TK_VAR TK_ID TK_TIPO_STRING '=' E ';' 
 			{
-				bool encontrei = buscaVariavel($2.label); 
-				string temp = gentempcode();
+				if ($5.tipo == "string"){
+					bool encontrei = buscaVariavel($2.label); 
+					$$.label = gentempcode();
 
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
-				
-				addStr($2.label, "string",  temp, $5.label);
-				// $$.traducao = "\t" + temp + " = " + $5.label + ";\n";
-				$$.traducao = "\tstrcpy(" + temp + ", " + $5.label + ");\n"; 
+					if(encontrei)
+						yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
+					
+					addStr($2.label, "string", $$.label, $5.conteudo);
+					
+					$$.traducao = $5.traducao + "\tstrcpy(" + $$.label + ", " + $5.label + ");\n"; 
+					cout << "var string = algo \n" + $$.traducao << endl;
+					// $$.label = "\tstrcpy(" + temp + ", " + $5.label + ");\n";
+				}
+				else yyerror("Atribuição inválida");
 			}
 			;
 
@@ -330,10 +343,19 @@ E
 				string converter;
 
 				if($1.tipo == $3.tipo){
-					$$.tipo = $1.tipo;
-					$$.traducao = $1.traducao + $3.traducao + "\t" + 
-					$$.label + " = " + $1.label + " + " + $3.label + ";\n";
-					addSimbolo($$.label, $$.tipo, $$.label);
+					if ($1.tipo == "string"){
+						$$.tipo = $1.tipo;
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						"strcat(" + $1.label + ", " + $3.label + ");\n";
+						addSimbolo($$.label, $$.tipo, $$.label);
+					}
+
+					else{
+						$$.tipo = $1.tipo;
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						$$.label + " = " + $1.label + " + " + $3.label + ";\n";
+						addSimbolo($$.label, $$.tipo, $$.label);
+					}
 				}								
 				else if($1.tipo == "int" & $3.tipo == "float"){
 					$$.tipo = $3.tipo;
@@ -639,21 +661,16 @@ E
 				if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
 
 				TIPO_SIMBOLO var = getSimbolo($1.label);
-
-				cout <<"Passei aqui" << endl;
+				
 				if(var.tipoVariavel == $3.tipo){
-					cout << "Tipos iguais ->" + var.tipoVariavel + $3.tipo << endl;
 					if (var.tipoVariavel == "string"){
-						$$.traducao = "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
+						cout << "$3.traducao no = " + $3.traducao << endl;
+						$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
 					}
 	
 					else{
-						cout << "tradução 1 - > " + $1.traducao << endl;
-						cout << "tradução 3 - > " + $3.traducao << endl;
 						$$.traducao = $1.traducao + $3.traducao + "\t" + 
 						var.tempVariavel + " = " + $3.label + ";\n";
-
-						cout << "traducao $$ ->\n " + $$.traducao << endl;
 					}
 				}
 				else if (var.tipoVariavel == "int" & $3.tipo == "float")
@@ -775,8 +792,9 @@ E
 				$$.conteudo = $$.label;
 				$$.label = gentempcode();
 				addStr($$.label, $$.tipo, $$.label, $$.conteudo);
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				
+				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				$$.traducao = "\tstrcpy(" + $$.label + ", " + $1.label + ");\t//"+ $$.label +"\n";	
+				// cout << "traducao 1 " + $$.traducao << endl;			
 			}
 	
 			| TK_ID
@@ -860,7 +878,7 @@ E
 				
 				TIPO_SIMBOLO var = getSimbolo($4.label);
 
-				$$.traducao = "\tcin >> " + var.tempVariavel + ";\n" + $3.traducao; 
+				$$.traducao = $4.traducao + "\tcin >> " + var.tempVariavel + ";\n" + $3.traducao; 
 			} 
 			;
 
@@ -904,12 +922,12 @@ void print_var(){
 		if (var.tipoVariavel == "string"){
 			var.tipoVariavel = "char";
 			if (var.conteudo == "\0"){
-				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\n";
+				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\t//" + var.nomeVariavel + "\n";
 			}
 			
 			else{
 				int size = getLength(var.conteudo) - 2; // O -2 remove as aspas que vem junto da string 
-				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\n";
+				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
 			}
 		}
 		else
@@ -981,19 +999,7 @@ int getLength(string str){
 
 
 int main( int argc, char* argv[] )
-{
-	cout << "******************\n";
-
-	char t1[3];
-    // char t2[500];
-
-    strcpy(t1, "oi");
-    // t2 = t1;
-    cout << t1 << endl;
-
-	cout << "******************\n";
-
-
+{	
 	inicializaAscii();
 
 	var_temp_qnt = 0;

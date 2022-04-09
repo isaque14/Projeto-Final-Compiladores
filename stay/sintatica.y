@@ -232,14 +232,15 @@ COMANDOS	: COMANDO COMANDOS
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $4.label;
 
-				$$.traducao = "INICIO_FOR:\n" +
-				$2.traducao + $4.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_FOR;"
-				"\n\t{\n" +
-			 	$8.traducao +
-				"\t}\n" +
+				$$.traducao = $2.traducao + "INICIO_FOR:\n" +
+				$4.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_FOR;\n" +
+			 	$7.traducao + $6.traducao +
 				"\tgoto INICIO_FOR;\n" +
-				"FIM_FOR:\n\n";
+				"FIM_FOR:\n\n" + 
+				$8.traducao;
+
+				cout << "testezinho bala -> " + $2.traducao + " ***=*** " + $6.traducao + ";\n" << endl;
 			}
 
 			;

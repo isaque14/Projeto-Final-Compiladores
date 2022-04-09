@@ -2,11 +2,14 @@ func main()
 {
 	var a int = 0;
 
-	while a < 5 {
-		print(a);
-		print(": ok");
+	do {
+		println(a);
 		a++;
-	}
-	
+	}while a < 1;
+
+	print("Resultado = ");
+	print(a);
+
+
 }
 

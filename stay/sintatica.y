@@ -77,7 +77,7 @@ void yyerror(string);
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
-%token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE
+%token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO
 
 %start S
 
@@ -116,36 +116,82 @@ COMANDOS	: COMANDO COMANDOS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
 			}
-			
-			| TK_IF E '{' COMANDOS '}'
-			{
 
+			|
+			{
+				$$.traducao + "";
+			}
+
+			| BLOCO 
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| TK_IF E BLOCO COMANDOS
+			{
 				string temp = gentempcode();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = "\t" + condicao + ";\n" +
+				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto FIM_IF;"
 				"\n\t{\n" +
-			 	$4.traducao +
+			 	$3.traducao +
 				"\t}\n" +
-				"\tFIM_IF:\n\n";
+				"\tFIM_IF:\n\n" +
+				$4.traducao;
 
 			}
-
-			| TK_ELSE '{' COMANDOS '}'
+			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
 			{
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $2.label;
 
-				cout << "Reconhece else \n";
-				// $$.traducao = "\t{\n" +
-				// $3.traducao +
-				// "\t};\n";
-
+				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\t{\n" +
+			 	$3.traducao +
+				"\tgoto FIM_ELSE;\n" +
+				"\t}\n" +
+				"FIM_IF:\n" +
+				"INICIO_ELSE:\n" +
+				$5.traducao +
+				"FIM_ELSE:\n\n" +
+				$6.traducao;
 
 			}
 
-			| TK_WHILE E '{' COMANDOS '}'
+			| TK_IF E BLOCO TK_ELSE_IF E BLOCO COMANDOS
+			{
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $2.label;
+
+				string temp2 = gentempcode();
+				addSimbolo(temp2, "bool", temp2);
+				string condicao2 = temp2 + " = !" + $5.label;
+
+				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\t{\n" +
+			 	$3.traducao +
+				"\t}\n" +
+				"FIM_IF:\n" +
+				"INICIO_ELSE_IF:\n" +
+				$5.traducao + "\t" + condicao2 + ";\n" +
+				"\n\tif (" + temp2 + ") goto FIM_ELSE_IF;"
+				"\n\t{\n" +
+			 	$6.traducao +
+				"\t}\n" +
+				"FIM_ELSE_IF:\n\n" + 
+				$7.traducao;
+			}
+
+			| TK_WHILE E BLOCO COMANDOS 
 			{
 				string temp = gentempcode();
 				
@@ -156,16 +202,44 @@ COMANDOS	: COMANDO COMANDOS
 				$2.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto FIM_WHILE;"
 				"\n\t{\n" +
-			 	$4.traducao +
+			 	$3.traducao +
 				"\t}\n" +
 				"\tgoto INICIO_WHILE;\n" +
-				"FIM_WHILE:\n\n";
-
+				"FIM_WHILE:\n\n" +
+				$4.traducao;
 			}
 
-			|
+			| TK_DO BLOCO TK_WHILE E ';' COMANDOS
 			{
-				$$.traducao + "";
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $4.label;
+
+				$$.traducao = "INICIO_DO_WHILE:\n" +
+				$2.traducao + $4.traducao + "\t" + condicao + ";\n"
+				"\tif (" + temp + ") goto FIM_DO_WHILE;\n"
+				"\tgoto INICIO_DO_WHILE;\n" +
+				"FIM_DO_WHILE:\n\n" +
+				$6.traducao;
+
+			}			
+
+			| TK_FOR E ';' E ';' E BLOCO COMANDOS
+			{
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $4.label;
+
+				$$.traducao = "INICIO_FOR:\n" +
+				$2.traducao + $4.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_FOR;"
+				"\n\t{\n" +
+			 	$8.traducao +
+				"\t}\n" +
+				"\tgoto INICIO_FOR;\n" +
+				"FIM_FOR:\n\n";
 			}
 
 			;
@@ -1061,7 +1135,7 @@ int getLength(string str){
 	int i = 0;
 	while (str[i] != '\0') i++;
 
-	return i;
+	return i+1;
 }
 
 

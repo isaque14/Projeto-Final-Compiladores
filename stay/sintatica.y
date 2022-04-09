@@ -77,7 +77,7 @@ void yyerror(string);
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
-%token TK_IF
+%token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE
 
 %start S
 
@@ -125,13 +125,41 @@ COMANDOS	: COMANDO COMANDOS
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
 
-
-				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				$$.traducao = "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto FIM_IF;"
 				"\n\t{\n" +
 			 	$4.traducao +
 				"\t}\n" +
 				"\tFIM_IF:\n\n";
+
+			}
+
+			| TK_ELSE '{' COMANDOS '}'
+			{
+
+				cout << "Reconhece else \n";
+				// $$.traducao = "\t{\n" +
+				// $3.traducao +
+				// "\t};\n";
+
+
+			}
+
+			| TK_WHILE E '{' COMANDOS '}'
+			{
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $2.label;
+
+				$$.traducao = "INICIO_WHILE:\n" +
+				$2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_WHILE;"
+				"\n\t{\n" +
+			 	$4.traducao +
+				"\t}\n" +
+				"\tgoto INICIO_WHILE;\n" +
+				"FIM_WHILE:\n\n";
 
 			}
 

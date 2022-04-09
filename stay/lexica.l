@@ -45,6 +45,9 @@ ID {LETRA}({LETRA}|{NUM})*
 "scan"      { return TK_SCAN; }
 
 "if"        { return TK_IF; }
+"else"      { return TK_ELSE; }
+"else if"   { return TK_ELSE_IF; }
+"while"     { return TK_WHILE; }
 
 
 

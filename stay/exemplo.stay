@@ -1,12 +1,11 @@
 func main()
 {
-	var a int;
+	var a int = 0;
 
-	if 1 {
-		var avg float;
-		avg = 6.2;
-		scan(&a);
+	while a < 5 {
 		print(a);
+		print(": ok");
+		a++;
 	}
 	
 }

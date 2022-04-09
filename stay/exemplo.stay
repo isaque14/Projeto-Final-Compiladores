@@ -1,8 +1,13 @@
 func main()
 {
-	var name string = "isaque";
+	var a int;
 
-	name == " Diniz";
-
+	if 1 {
+		var avg float;
+		avg = 6.2;
+		scan(&a);
+		print(a);
+	}
+	
 }
 

@@ -38,11 +38,14 @@ ID {LETRA}({LETRA}|{NUM})*
 "string"    { return TK_TIPO_STRING; }
 
 "True"      { return TK_TRUE; }
-
 "False"     { return TK_FALSE; }
+
 "println"   { return TK_PRINTLN; }
 "print"     { return TK_PRINT; }
 "scan"      { return TK_SCAN; }
+
+"if"        { return TK_IF; }
+
 
 
 [(){}[\];,]	{ return *yytext; }

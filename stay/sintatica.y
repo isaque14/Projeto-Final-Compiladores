@@ -32,6 +32,19 @@ typedef struct
 	string caracter;
 } TABELA_ASCII;
 
+typedef struct lista Lista; 
+struct lista
+{
+	int info;
+	vector<TIPO_SIMBOLO> *prox;
+};
+
+typedef struct pilha Pilha;
+struct pilha
+{
+	Lista *prim; // topo da pilha
+};
+
 string strGeralSize = "500";
 int var_temp_qnt;
 vector<TIPO_SIMBOLO> tabelaSimbolos;
@@ -64,6 +77,7 @@ void yyerror(string);
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
+%token TK_IF
 
 %start S
 
@@ -91,16 +105,41 @@ BLOCO		: '{' COMANDOS '}'
 			{
 				$$.traducao = $2.traducao;
 			}
+
+			| COMANDOS '{' COMANDOS '}'
+			{
+				
+			}
 			;
 
 COMANDOS	: COMANDO COMANDOS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
 			}
+			
+			| TK_IF E '{' COMANDOS '}'
+			{
+
+				string temp = gentempcode();
+				
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $2.label;
+
+
+				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\t{\n" +
+			 	$4.traducao +
+				"\t}\n" +
+				"\tFIM_IF:\n\n";
+
+			}
+
 			|
 			{
 				$$.traducao + "";
 			}
+
 			;
 
 COMANDO 	: E ';'
@@ -862,7 +901,7 @@ E
 			
 			| TK_PRINT '(' E ')'
 			{
-				cout << "traducao no print -> \n"+ $3.traducao + "\n label -> " + $3.label << endl;
+				// cout << "traducao no print -> \n"+ $3.traducao + "\n label -> " + $3.label << endl;
 				// if ($3.tipo == "string")
 				// 	$$.traducao = "\tcout << " + $3.label + ";\n";	
 				

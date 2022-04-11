@@ -101,7 +101,7 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			}
 			;
 
-BLOCO		: '{' COMANDOS '}'
+BLOCO		: REGRA COMANDOS '}'
 			{
 				$$.traducao = $2.traducao;
 			}
@@ -111,6 +111,9 @@ BLOCO		: '{' COMANDOS '}'
 				
 			}
 			;
+REGRA: 		'{' {
+	empilhar novo mapa
+}
 
 COMANDOS	: COMANDO COMANDOS
 			{

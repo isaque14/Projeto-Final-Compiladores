@@ -47,10 +47,11 @@ struct pilha
 
 string strGeralSize = "500";
 int var_temp_qnt;
+int num_jump;
 vector<TIPO_SIMBOLO> tabelaSimbolos;
 vector<TABELA_ASCII> table_ascii; 
 
-
+string label_jump();
 string gentempcode();
 void print_table();
 bool buscaVariavel(string nomeVariavel);
@@ -122,7 +123,7 @@ COMANDOS	: COMANDO COMANDOS
 
 			|
 			{
-				$$.traducao + "";
+				$$.traducao = "";
 			}
 
 			| BLOCO 
@@ -132,44 +133,50 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO COMANDOS
 			{
+				string jump = label_jump();
+
 				string temp = gentempcode();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
 				"\n\t{\n" +
 			 	$3.traducao +
 				"\t}\n" +
-				"\tFIM_IF:\n\n" +
+				"\tFIM_IF_" + jump + ":\n\n" +
 				$4.traducao;
 
 			}
 			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
 			{
 				string temp = gentempcode();
+
+				string jump1 = label_jump();
+				string jump2 = label_jump();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + ";"
 				"\n\t{\n" +
 			 	$3.traducao +
-				"\tgoto FIM_ELSE;\n" +
+				"\tgoto FIM_ELSE_" + jump2 + ";\n" +
 				"\t}\n" +
-				"FIM_IF:\n" +
-				"INICIO_ELSE:\n" +
+				"FIM_IF_" + jump1 + ":\n" +
+				"INICIO_ELSE_" + jump2 + ":\n" +
 				$5.traducao +
-				"FIM_ELSE:\n\n" +
-				$6.traducao;
+				"FIM_ELSE_" + jump2 + ":\n\n" + $6.traducao;
 
 			}
 
 			| TK_IF E BLOCO TK_ELSE_IF E BLOCO COMANDOS
 			{
 				string temp = gentempcode();
+				string jump1 = label_jump();
+				string jump2 = label_jump();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
@@ -179,71 +186,69 @@ COMANDOS	: COMANDO COMANDOS
 				string condicao2 = temp2 + " = !" + $5.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF;"
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + ";"
 				"\n\t{\n" +
 			 	$3.traducao +
 				"\t}\n" +
-				"FIM_IF:\n" +
-				"INICIO_ELSE_IF:\n" +
+				"FIM_IF_" + jump1 + ":\n" +
+				"INICIO_ELSE_IF_" + jump2 + ":\n" +
 				$5.traducao + "\t" + condicao2 + ";\n" +
-				"\n\tif (" + temp2 + ") goto FIM_ELSE_IF;"
+				"\n\tif (" + temp2 + ") goto FIM_ELSE_IF_" + jump2 + ";"
 				"\n\t{\n" +
 			 	$6.traducao +
 				"\t}\n" +
-				"FIM_ELSE_IF:\n\n" + 
-				$7.traducao;
+				"FIM_ELSE_IF_" + jump2 + ":\n\n" + $7.traducao;
 			}
 
 			| TK_WHILE E BLOCO COMANDOS 
 			{
 				string temp = gentempcode();
-				
+				string jump1 = label_jump();
+
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = "INICIO_WHILE:\n" +
+				$$.traducao = "INICIO_WHILE_" + jump1 + ":\n" +
 				$2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_WHILE;"
+				"\n\tif (" + temp + ") goto FIM_WHILE_" + jump1 + ";"
 				"\n\t{\n" +
 			 	$3.traducao +
 				"\t}\n" +
-				"\tgoto INICIO_WHILE;\n" +
-				"FIM_WHILE:\n\n" +
-				$4.traducao;
+				"\tgoto INICIO_WHILE_" + jump1 + ";\n" +
+				"FIM_WHILE_" + jump1 + ":\n\n" + $4.traducao;
 			}
 
 			| TK_DO BLOCO TK_WHILE E ';' COMANDOS
 			{
+				cout << "COMANDOS " + $6.traducao << endl;
 				string temp = gentempcode();
+				string jump = label_jump();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $4.label;
 
-				$$.traducao = "INICIO_DO_WHILE:\n" +
+				$$.traducao = "INICIO_DO_WHILE_" + jump + ":\n" +
 				$2.traducao + $4.traducao + "\t" + condicao + ";\n"
-				"\tif (" + temp + ") goto FIM_DO_WHILE;\n"
-				"\tgoto INICIO_DO_WHILE;\n" +
-				"FIM_DO_WHILE:\n\n" +
-				$6.traducao;
+				"\tif (" + temp + ") goto FIM_DO_WHILE_" + jump + ";\n"
+				"\tgoto INICIO_DO_WHILE_" + jump + ";\n" +
+				"FIM_DO_WHILE_" + jump + ":\n\n" + $6.traducao;
 
 			}			
 
 			| TK_FOR E ';' E ';' E BLOCO COMANDOS
 			{
 				string temp = gentempcode();
+				string jump = label_jump();
 				
 				addSimbolo(temp, "bool", temp);
 				string condicao = temp + " = !" + $4.label;
 
-				$$.traducao = $2.traducao + "INICIO_FOR:\n" +
+				$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" +
 				$4.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_FOR;\n" +
+				"\n\tif (" + temp + ") goto FIM_FOR_" + jump + ";\n" +
 			 	$7.traducao + $6.traducao +
-				"\tgoto INICIO_FOR;\n" +
-				"FIM_FOR:\n\n" + 
-				$8.traducao;
-
-				cout << "testezinho bala -> " + $2.traducao + " ***=*** " + $6.traducao + ";\n" << endl;
+				"\tgoto INICIO_FOR_" + jump + ";\n" +
+				"FIM_FOR_" + jump + ":\n\n" + $8.traducao;
 			}
 
 			;
@@ -1161,6 +1166,11 @@ int yyparse();
 string gentempcode(){
 	var_temp_qnt++;
 	return "t" + std::to_string(var_temp_qnt);
+}
+
+string label_jump(){
+	num_jump++;
+	return "J" + std::to_string(num_jump);
 }
 
 void addSimbolo(string nome, string tipo, string temp){

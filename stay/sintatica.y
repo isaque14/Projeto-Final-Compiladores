@@ -101,7 +101,7 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			}
 			;
 
-BLOCO		: REGRA COMANDOS '}'
+BLOCO		: '{' COMANDOS '}'
 			{
 				$$.traducao = $2.traducao;
 			}
@@ -723,47 +723,172 @@ E
 
 			| E '>' E
 			{
+				string temp = gentempcode();
+				$$.label = temp;
+
 				relacionalInvalida($1.tipo, $3.tipo);
-				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " > " + $3.label + ";\n";
+
+				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = " + $1.label + " > " + $3.label + ";\n";
+				}
+
+				else if ($1.tipo == "int" && $3.tipo == "float"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
+				}
+
+				else if ($1.tipo == "float" && $3.tipo == "int"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
+				}
 			}
 			
 			| E '<' E
 			{
+				string temp = gentempcode();
+				$$.label = temp;
+
 				relacionalInvalida($1.tipo, $3.tipo);
-				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " < " + $3.label + ";\n";
+
+				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = " + $1.label + " < " + $3.label + ";\n";
+				}
+
+				else if ($1.tipo == "int" && $3.tipo == "float"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
+				}
+
+				else if ($1.tipo == "float" && $3.tipo == "int"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
+				}
 			}
 
 			| E TK_MAIOR_IGUAL E
 			{
+				string temp = gentempcode();
+				$$.label = temp;
+
 				relacionalInvalida($1.tipo, $3.tipo);
-				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
+
+				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
+				}
+
+				else if ($1.tipo == "int" && $3.tipo == "float"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
+				}
+
+				else if ($1.tipo == "float" && $3.tipo == "int"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
+				}
 			}
 			
 			| E TK_MENOR_IGUAL E
 			{
+				string temp = gentempcode();
+				$$.label = temp;
+
 				relacionalInvalida($1.tipo, $3.tipo);
-				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
+
+				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
+				}
+
+				else if ($1.tipo == "int" && $3.tipo == "float"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
+				}
+
+				else if ($1.tipo == "float" && $3.tipo == "int"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
+				}
 			}
 
 			| E TK_IGUAL_IGUAL E
 			{
+				string temp = gentempcode();
+				$$.label = temp;
+
 				relacionalInvalida($1.tipo, $3.tipo);
-				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				$$.label + " = " + $1.label + " == " + $3.label + ";\n";
+
+				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = " + $1.label + " == " + $3.label + ";\n";
+				}
+
+				else if ($1.tipo == "int" && $3.tipo == "float"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
+				}
+
+				else if ($1.tipo == "float" && $3.tipo == "int"){
+					addSimbolo(temp, "int", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
+					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
+				}
 			}
 
 			//OPERADORES LÓGICOS

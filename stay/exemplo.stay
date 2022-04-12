@@ -2,18 +2,9 @@
 
 func main()
 {
-	var a int;
-	for a = 0; a < 10; a++ {
-		var a int;
-		a = 1;
-		print(a);
-		if()
-		{
-			a
-			break;
-		}
-	}
+	var a int = 1;
+	var b float = 7.9;
 
-
+	b > a; 
 }
 

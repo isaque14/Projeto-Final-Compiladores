@@ -6,6 +6,10 @@ func main()
 
 	for i = 0; i < 10; i++{
 		print(i);
+
+		while 1{
+			var name string = "isaque";
+		}
 	}
 
 	print(i);

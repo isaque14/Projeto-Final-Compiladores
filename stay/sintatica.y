@@ -32,23 +32,11 @@ typedef struct
 	string caracter;
 } TABELA_ASCII;
 
-typedef struct lista Lista; 
-struct lista
-{
-	int info;
-	vector<TIPO_SIMBOLO> *prox;
-};
-
-typedef struct pilha Pilha;
-struct pilha
-{
-	Lista *prim; // topo da pilha
-};
 
 string strGeralSize = "500";
 int var_temp_qnt;
 int num_jump;
-vector<TIPO_SIMBOLO> tabelaSimbolos;
+vector<TIPO_SIMBOLO> global_escopo;
 vector<TABELA_ASCII> table_ascii; 
 
 string label_jump();
@@ -88,15 +76,17 @@ void yyerror(string);
 
 S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\nint main(void)\n{\n" <<endl;
+				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
 				print_var();
 				
+				cout << "\nint main(void)\n{\n" <<endl;
+				
 				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
 
-				// for (int i = 0; i < tabelaSimbolos.size(); i++){
+				// for (int i = 0; i < global_escopo.size(); i++){
 					
-				// 	cout << std::to_string(i) + " = " + tabelaSimbolos[i].nomeVariavel + " / " +tabelaSimbolos[i].tempVariavel + "\t" + tabelaSimbolos[i].tipoVariavel + "\t" + tabelaSimbolos[i].conteudo << endl;
+				// 	cout << std::to_string(i) + " = " + global_escopo[i].nomeVariavel + " / " +global_escopo[i].tempVariavel + "\t" + global_escopo[i].tipoVariavel + "\t" + global_escopo[i].conteudo << endl;
 				// }
 
 			}
@@ -1076,9 +1066,9 @@ E
 			{
 				bool encontrei = false;
 				TIPO_SIMBOLO variavel;
-				for (int i = 0; i < tabelaSimbolos.size(); i++){
-					if(tabelaSimbolos[i].nomeVariavel == $1.label){
-						variavel = tabelaSimbolos[i];
+				for (int i = 0; i < global_escopo.size(); i++){
+					if(global_escopo[i].nomeVariavel == $1.label){
+						variavel = global_escopo[i];
 						encontrei = true;
 					} 
 				}
@@ -1179,7 +1169,7 @@ void addSimbolo(string nome, string tipo, string temp){
 	var.tipoVariavel = tipo;
 	var.tempVariavel = temp;
 
-	tabelaSimbolos.push_back(var);					
+	global_escopo.push_back(var);					
 }
 
 void addStr(string nome, string tipo, string temp, string conteudo){
@@ -1189,35 +1179,35 @@ void addStr(string nome, string tipo, string temp, string conteudo){
 	var.tempVariavel = temp;
 	var.conteudo = conteudo;
 
-	tabelaSimbolos.push_back(var);					
+	global_escopo.push_back(var);					
 }
 
 void print_var(){
 	TIPO_SIMBOLO var;
 	
-	for (int i = 0; i < tabelaSimbolos.size(); i++){
-		var = tabelaSimbolos[i];
+	for (int i = 0; i < global_escopo.size(); i++){
+		var = global_escopo[i];
 		if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
 
 		if (var.tipoVariavel == "string"){
 			var.tipoVariavel = "char";
 			if (var.conteudo == "\0"){
-				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\t//" + var.nomeVariavel + "\n";
+				cout << var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\t//" + var.nomeVariavel + "\n";
 			}
 			
 			else{
 				int size = getLength(var.conteudo) - 2; // O -2 remove as aspas que vem junto da string 
-				cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
+				cout << var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
 			}
 		}
 		else
-			cout << "\t" + var.tipoVariavel + " " + var.tempVariavel + ";\n";
+			cout << var.tipoVariavel + " " + var.tempVariavel + ";\n";
 	}
 }
 
 bool buscaVariavel(string nomeVariavel){
-	for (int i = 0; i < tabelaSimbolos.size(); i++){
-		if(tabelaSimbolos[i].nomeVariavel == nomeVariavel){
+	for (int i = 0; i < global_escopo.size(); i++){
+		if(global_escopo[i].nomeVariavel == nomeVariavel){
 			return true;
 		}
 	}
@@ -1225,9 +1215,9 @@ bool buscaVariavel(string nomeVariavel){
 }
 
 TIPO_SIMBOLO getSimbolo(string variavel){
-	for (int i = 0; i < tabelaSimbolos.size(); i++){
-		if(tabelaSimbolos[i].nomeVariavel == variavel)
-			return tabelaSimbolos[i];					
+	for (int i = 0; i < global_escopo.size(); i++){
+		if(global_escopo[i].nomeVariavel == variavel)
+			return global_escopo[i];					
 	}
 	
 	yyerror("erro: variável não declarada");

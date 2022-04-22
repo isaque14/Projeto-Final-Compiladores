@@ -47,9 +47,16 @@ ID {LETRA}({LETRA}|{NUM})*
 "if"        { return TK_IF; }
 "else"      { return TK_ELSE; }
 "else if"   { return TK_ELSE_IF; }
-"while"     { return TK_WHILE; }
-"do"        { return TK_DO; }
-"for"       { return TK_FOR; }
+
+"break"     { return TK_BREAK; }
+"continue"  { return TK_CONTINUE; }
+
+"while"     { yylval.label = genLaceNameCode(); pushLoop("while"); return TK_WHILE; }
+"for"       { yylval.label = genLaceNameCode(); pushLoop("for"); return TK_FOR; }
+"do"        { yylval.label = genLaceNameCode(); pushLoop("do"); yylval.traducao = "DO"; return TK_DO; }
+
+"{"         { pushContexto(); return *yytext;}
+"}"         { popContexto(); return *yytext;}
 
 
 

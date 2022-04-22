@@ -1,17 +1,12 @@
-
-
 func main()
 {
-	var i int;
-
-	for i = 0; i < 10; i++{
-		print(i);
-
-		while 1{
-			var name string = "isaque";
-		}
+	var a int;
+	var b bool = True;
+	
+	while True{
+		print("ok");
+		break;
 	}
-
-	print(i);
+	
 
 }

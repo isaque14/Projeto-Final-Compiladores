@@ -9,6 +9,18 @@
 
 using namespace std;
 
+int var_lace_qnt;
+int var_cond_qnt;
+int var_linha_qnt = 1;
+int var_lace_name_qnt = 0;
+
+string error = "";
+string warning = "";
+string contLinha = "";
+string declaracoes = "";
+
+
+
 struct atributos
 {
 	string label;
@@ -28,9 +40,22 @@ typedef struct
 
 typedef struct
 {
+	string nomeLaco;
+	string tipoLaco;
+	string fimLaco;
+	string contexto;
+}	TIPO_LOOP;
+
+typedef struct
+{
 	int indice;
 	string caracter;
 } TABELA_ASCII;
+
+
+vector<TIPO_LOOP> tabelaLoop;
+vector<vector<TIPO_SIMBOLO>> mapa;
+int contextoGlobal;
 
 
 string strGeralSize = "500";
@@ -41,17 +66,32 @@ vector<TABELA_ASCII> table_ascii;
 
 string label_jump();
 string gentempcode();
+
+string genLacecode();
+string genCondcode();
+string genLaceNameCode();
+
+
 void print_table();
-bool buscaVariavel(string nomeVariavel);
+bool buscaVariavel(string variavel);
 void addSimbolo(string nome, string tipo, string temp);
 void addStr(string nome, string tipo, string temp, string conteudo);
 TIPO_SIMBOLO getSimbolo(string variavel);
 string cast(string tipo1, string tipo2);
 bool comparaTipo(string tipo1, string tipo2);
 void inicializaAscii();
-void print_var();
+void print_var(TIPO_SIMBOLO);
 void relacionalInvalida(string tipo1, string tipo2);
 int getLength(string str);
+
+
+void atualizarContexto(int num);
+void contadorDeLinha();
+void pushContexto();
+void popContexto();
+void pushLoop(string tipo);
+TIPO_LOOP getLace(string nome);
+TIPO_LOOP getLaceBreak();
 
 
 int yylex(void);
@@ -66,7 +106,7 @@ void yyerror(string);
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
-%token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO
+%token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO TK_BREAK TK_CONTINUE
 
 %start S
 
@@ -76,14 +116,23 @@ void yyerror(string);
 
 S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
-				print_var();
+
+				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
 				cout << "\nint main(void)\n{\n" <<endl;
 				
+				cout << declaracoes;
+
 				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
 
+				cout << "\n*******************\nTamanho mapa " + std::to_string(mapa.size()) << endl; 
+
+				// vector<TIPO_SIMBOLO> aux = mapa[1];
+				// cout << "MAPA ###\n";
+				// for (int i = 0; i <= aux.size() -1; i++){
+				// 	cout << aux[i].tipoVariavel + " " + aux[i].tempVariavel << endl;
+				// }
 				// for (int i = 0; i < global_escopo.size(); i++){
 					
 				// 	cout << std::to_string(i) + " = " + global_escopo[i].nomeVariavel + " / " +global_escopo[i].tempVariavel + "\t" + global_escopo[i].tipoVariavel + "\t" + global_escopo[i].conteudo << endl;
@@ -94,17 +143,13 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 
 BLOCO		: '{' COMANDOS '}'
 			{
+				// string escopo = print_var();
+				// cout << "Escopo " + escopo <<endl;
 				$$.traducao = $2.traducao;
-			}
 
-			| COMANDOS '{' COMANDOS '}'
-			{
-				
+				cout << "Teste " + $2.traducao << endl;
 			}
 			;
-REGRA: 		'{' {
-	empilhar novo mapa
-}
 
 COMANDOS	: COMANDO COMANDOS
 			{
@@ -190,22 +235,40 @@ COMANDOS	: COMANDO COMANDOS
 				"FIM_ELSE_IF_" + jump2 + ":\n\n" + $7.traducao;
 			}
 
+
+			/* | TK_WHILE '(' P ')' BLOCO COMANDOS
+			{
+				$$.label = gentempcode();
+				addTemp($$.label, $3.tipo);
+				string lace = genLacecode();
+				TIPO_LOOP loop = getLace($1.label);
+
+				$$.traducao = lace + $3.traducao + "\t" + $$.label + " = !" +
+				$3.label + ";\n" + "\tIF(" + $$.label + ") goto " + loop.fimLaco + "\n" +
+				$5.traducao + "\tgoto " + lace + "\n\t" + loop.fimLaco + "\n" + $6.traducao;
+			} */
+
+
 			| TK_WHILE E BLOCO COMANDOS 
 			{
-				string temp = gentempcode();
-				string jump1 = label_jump();
+				cout << $2.tipo << endl;
+				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
+				string temp = gentempcode();
+				$$.label = temp;
 				addSimbolo(temp, "bool", temp);
+				string lace = genLacecode();
+				TIPO_LOOP loop = getLace($1.label);	
+				
 				string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = "INICIO_WHILE_" + jump1 + ":\n" +
-				$2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_WHILE_" + jump1 + ";"
-				"\n\t{\n" +
+				$$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+				"\t{\n" +
 			 	$3.traducao +
 				"\t}\n" +
-				"\tgoto INICIO_WHILE_" + jump1 + ";\n" +
-				"FIM_WHILE_" + jump1 + ":\n\n" + $4.traducao;
+				"\tgoto " + lace + ";\n" +
+				loop.fimLaco + ":\n\n" + $4.traducao;
 			}
 
 			| TK_DO BLOCO TK_WHILE E ';' COMANDOS
@@ -240,11 +303,22 @@ COMANDOS	: COMANDO COMANDOS
 				"\tgoto INICIO_FOR_" + jump + ";\n" +
 				"FIM_FOR_" + jump + ":\n\n" + $8.traducao;
 			}
-
 			;
+
+/* BREAK 		: TK_BREAK
+			{
+				TIPO_LOOP loop = getLaceBreak();
+				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
+			} */
 
 COMANDO 	: E ';'
 			
+			| TK_BREAK ';'
+			{
+				TIPO_LOOP loop = getLaceBreak();
+				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
+			}
+
 			| TK_VAR TK_ID TK_TIPO_INT ';'
 			{
 				bool encontrei = buscaVariavel($2.label);
@@ -1027,7 +1101,7 @@ E
 
 			| TK_TRUE
 			{
-				$$.tipo = "int";
+				$$.tipo = "bool";
 				$$.conteudo = "1";
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
@@ -1036,7 +1110,7 @@ E
 
 			| TK_FALSE
 			{
-				$$.tipo = "int";
+				$$.tipo = "bool";
 				$$.conteudo = "0";
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
@@ -1158,6 +1232,21 @@ string gentempcode(){
 	return "t" + std::to_string(var_temp_qnt);
 }
 
+string genLacecode(){
+	var_lace_qnt++;
+	return "_L" + std::to_string(var_lace_qnt) + ":";	
+}
+
+string genCondcode(){
+	var_cond_qnt++;
+	return "FIM_IF_" + std::to_string(var_cond_qnt);
+}
+
+string genLaceNameCode(){
+	var_lace_name_qnt++;
+	return "loop_" + std::to_string(var_lace_name_qnt);
+}
+
 string label_jump(){
 	num_jump++;
 	return "J" + std::to_string(num_jump);
@@ -1169,7 +1258,12 @@ void addSimbolo(string nome, string tipo, string temp){
 	var.tipoVariavel = tipo;
 	var.tempVariavel = temp;
 
-	global_escopo.push_back(var);					
+	int contexto = mapa.size() - 1;
+	mapa[contexto].push_back(var);
+	
+	print_var(var);
+	/* declaracoes += "\t" + tipo + " " + temp + " ;\n"; */
+ 	cout << "TRUE? " + var.nomeVariavel + " contexto =  " + std::to_string(contexto) << endl; 				
 }
 
 void addStr(string nome, string tipo, string temp, string conteudo){
@@ -1179,35 +1273,41 @@ void addStr(string nome, string tipo, string temp, string conteudo){
 	var.tempVariavel = temp;
 	var.conteudo = conteudo;
 
-	global_escopo.push_back(var);					
+	int contexto = mapa.size() - 1;
+	mapa[contexto].push_back(var);		
+	print_var(var);		
 }
 
-void print_var(){
-	TIPO_SIMBOLO var;
-	
-	for (int i = 0; i < global_escopo.size(); i++){
-		var = global_escopo[i];
-		if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
+void print_var(TIPO_SIMBOLO var){
+	if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
 
-		if (var.tipoVariavel == "string"){
-			var.tipoVariavel = "char";
-			if (var.conteudo == "\0"){
-				cout << var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\t//" + var.nomeVariavel + "\n";
-			}
-			
-			else{
-				int size = getLength(var.conteudo) - 2; // O -2 remove as aspas que vem junto da string 
-				cout << var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
-			}
+	if (var.tipoVariavel == "string"){
+		var.tipoVariavel = "char";
+		if (var.conteudo == "\0"){
+			declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + strGeralSize + "];\t//" + var.nomeVariavel + "\n";
 		}
-		else
-			cout << var.tipoVariavel + " " + var.tempVariavel + ";\n";
+		
+		else{
+			int size = getLength(var.conteudo) - 2; // O -2 remove as aspas que vem junto da string 
+			declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
+		}
 	}
+	else{
+		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + ";\n";
+	}			
+
 }
 
-bool buscaVariavel(string nomeVariavel){
-	for (int i = 0; i < global_escopo.size(); i++){
-		if(global_escopo[i].nomeVariavel == nomeVariavel){
+bool buscaVariavel(string variavel){
+	
+	int contexto = mapa.size() - 1;
+	vector<TIPO_SIMBOLO> tabelaSimbolos;
+	tabelaSimbolos = mapa[contexto];
+
+	for(int i = 0; i < tabelaSimbolos.size(); i++)
+	{
+		if(tabelaSimbolos[i].nomeVariavel == variavel)
+		{
 			return true;
 		}
 	}
@@ -1215,12 +1315,23 @@ bool buscaVariavel(string nomeVariavel){
 }
 
 TIPO_SIMBOLO getSimbolo(string variavel){
-	for (int i = 0; i < global_escopo.size(); i++){
-		if(global_escopo[i].nomeVariavel == variavel)
-			return global_escopo[i];					
-	}
 	
-	yyerror("erro: variável não declarada");
+	int contexto = mapa.size() - 1;
+	vector<TIPO_SIMBOLO> tabelaSimbolos;
+	tabelaSimbolos = mapa[contexto];
+
+	while(contexto >= 0)
+	{
+		for (int i = tabelaSimbolos.size() - 1; i >= 0; i--)
+		{
+			if(tabelaSimbolos[i].nomeVariavel == variavel)
+			{
+				return tabelaSimbolos[i];
+			}				
+		}
+		contexto -= 1;
+		tabelaSimbolos = mapa[contexto];
+	}
 	exit(0);
 }
 
@@ -1270,10 +1381,13 @@ int getLength(string str){
 
 int main( int argc, char* argv[] )
 {	
-	inicializaAscii();
-
 	var_temp_qnt = 0;
+	contextoGlobal = 0;
+	vector<TIPO_SIMBOLO> tabelaSimbolos;
+	mapa.push_back(tabelaSimbolos);
 	
+	cout << std::to_string(mapa.size()) << endl;
+
 	yyparse();
 
 	return 0;
@@ -1284,3 +1398,44 @@ void yyerror( string MSG )
 	cout << MSG << endl;
 	exit (0);
 }				
+
+void pushContexto(){
+	vector<TIPO_SIMBOLO> tabelaSimbolos;
+	mapa.push_back(tabelaSimbolos);
+}
+
+void popContexto(){
+	mapa.pop_back();
+}
+
+void pushLoop(string tipo){
+
+	TIPO_LOOP aux;
+	aux.nomeLaco = "loop_" + std::to_string(var_lace_name_qnt);
+	aux.tipoLaco = tipo;
+	aux.fimLaco = genCondcode();
+	aux.contexto = mapa.size();
+	tabelaLoop.push_back(aux);
+}
+
+TIPO_LOOP getLace(string nome){
+
+	for (int i = tabelaLoop.size() - 1; i >= 0; i--)
+	{ 
+		if(tabelaLoop[i].nomeLaco == nome){
+			return tabelaLoop[i];
+		}
+	}
+	exit(0);
+}
+
+TIPO_LOOP getLaceBreak(){
+	int size = tabelaLoop.size();
+	return tabelaLoop[size - 1];
+}
+
+
+void contadorDeLinha(){
+	var_linha_qnt++;
+	contLinha = std::to_string(var_linha_qnt);
+}

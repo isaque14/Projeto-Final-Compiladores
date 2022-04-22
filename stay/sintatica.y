@@ -149,23 +149,25 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO COMANDOS
 			{
-				// if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+				/*if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
-				// string temp = gentempcode();
-				// $$.label = temp;
-				// addSimbolo(temp, "bool", temp);
+				string temp = gentempcode();
+				$$.label = temp;
+				addSimbolo(temp, "bool", temp);
 				// string lace = genLacecode();
-				// TIPO_LOOP loop = getLace($1.label);	
+				TIPO_LOOP loop = getLace($1.label);	
 				
-				// string condicao = temp + " = !" + $2.label;
+				string condicao = temp + " = !" + $2.label;
 
-				// $$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
-				// "\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-				// "\t{\n" +
-			 	// $3.traducao +
-				// "\t}\n" +
-				// "\tgoto " + lace + ";\n" +
-				// loop.fimLaco + ":\n\n" + $4.traducao;
+				$$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+				"\t{\n" +
+			 	$3.traducao +
+				"\t}\n" +
+				"\tgoto " + lace + ";\n" +
+				loop.fimLaco + ":\n\n" + $4.traducao;
+				
+				 */
 				
 				
 				
@@ -174,24 +176,23 @@ COMANDOS	: COMANDO COMANDOS
 				
 				
 				
-				
-				
-				
-				// string jump = label_jump();
+				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
-				// string temp = gentempcode();
+				string temp = gentempcode();
+				$$.label = temp;
+				addSimbolo(temp, "bool", temp);
+				string jump = label_jump();
 				
-				// addSimbolo(temp, "bool", temp);
-				// string condicao = temp + " = !" + $2.label;
+				addSimbolo(temp, "bool", temp);
+				string condicao = temp + " = !" + $2.label;
 
-				// $$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				// "\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
-				// "\n\t{\n" +
-			 	// $3.traducao +
-				// "\t}\n" +
-				// "\tFIM_IF_" + jump + ":\n\n" +
-				// $4.traducao;
-
+				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
+				"\n\t{\n" +
+			 	$3.traducao +
+				"\t}\n" +
+				"\tFIM_IF_" + jump + ":\n\n" +
+				$4.traducao;
 			}
 			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
 			{
@@ -1418,6 +1419,11 @@ TIPO_LOOP getLace(string nome){
 
 TIPO_LOOP getLaceBreak(){
 	int size = tabelaLoop.size();
+
+	if(size == 0){
+		yyerror("erro: comando break fora de laco");
+	}
+
 	return tabelaLoop[size - 1];
 }
 

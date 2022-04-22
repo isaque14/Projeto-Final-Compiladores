@@ -114,7 +114,7 @@ void yyerror(string);
 
 %%
 
-S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
+S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
 				
 
@@ -124,7 +124,7 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 				
 				cout << declaracoes;
 
-				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
+				cout << "\n" + $1.traducao + $6.traducao << "\treturn 0;\n}" << endl;
 
 				cout << "\n*******************\nTamanho mapa " + std::to_string(mapa.size()) << endl; 
 
@@ -143,11 +143,7 @@ S 			: TK_FUNC TK_MAIN '(' ')' BLOCO
 
 BLOCO		: '{' COMANDOS '}'
 			{
-				// string escopo = print_var();
-				// cout << "Escopo " + escopo <<endl;
 				$$.traducao = $2.traducao;
-
-				cout << "Teste " + $2.traducao << endl;
 			}
 			;
 
@@ -251,7 +247,7 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_WHILE E BLOCO COMANDOS 
 			{
-				cout << $2.tipo << endl;
+				cout << "tipo " + $2.tipo << endl;
 				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
 				string temp = gentempcode();
@@ -538,7 +534,6 @@ COMANDO 	: E ';'
 					addStr($2.label, "string", $$.label, $5.conteudo);
 					
 					$$.traducao = $5.traducao + "\tstrcpy(" + $$.label + ", " + $5.label + ");\n"; 
-					cout << "var string = algo \n" + $$.traducao << endl;
 					// $$.label = "\tstrcpy(" + temp + ", " + $5.label + ");\n";
 				}
 				else yyerror("Atribuição inválida");
@@ -965,7 +960,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
+				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " != " + $3.label + ";\n";
 			}
@@ -973,7 +968,7 @@ E
 			| E TK_OU E
 			{
 				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
+				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " || " + $3.label + ";\n";
 			}
@@ -982,14 +977,15 @@ E
 			{
 				cout << "Traduções -> " + $1.traducao + $3.traducao << endl;
 				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
+				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
 			}
 
 			| '!' E
 			{
 				$$.label = gentempcode();
-				addSimbolo($$.label, "int", $$.label);
+				$$.tipo = "bool";
+				addSimbolo($$.label, $$.tipo, $$.label);
 				$$.traducao = $2.traducao + "\t" + 
 				$$.label + " = " + "!" + $2.label + ";\n";
 			}
@@ -1140,8 +1136,6 @@ E
 			{
 				TIPO_SIMBOLO variavel = getSimbolo($1.label);	
 				$$.tipo = variavel.tipoVariavel;
-				cout << "VER " + $$.tipo + " " + variavel.nomeVariavel << endl;
-				// $$.conteudo = variavel.value;
 				$$.label = gentempcode();
 				addSimbolo(variavel.nomeVariavel, $$.tipo, $$.label);
 				$$.traducao = "\t" + $$.label + " = " + variavel.tempVariavel + ";\n";
@@ -1249,9 +1243,7 @@ void addSimbolo(string nome, string tipo, string temp){
 	int contexto = mapa.size() - 1;
 	mapa[contexto].push_back(var);
 	
-	print_var(var);
-	/* declaracoes += "\t" + tipo + " " + temp + " ;\n"; */
- 	cout << "TRUE? " + var.nomeVariavel + " contexto =  " + std::to_string(contexto) << endl; 				
+	print_var(var);				
 }
 
 void addStr(string nome, string tipo, string temp, string conteudo){

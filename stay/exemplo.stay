@@ -1,14 +1,12 @@
+var b int = 9;
+print(a);
 func main()
 {
-	var a int;
-	var b bool = True;
+	{
+		var a int;
 
-	print(name);
-	
-	while b{
-		var name string = "isaque";
-		break;
+		{
+			scan(a);
+		}
 	}
-	
-
 }

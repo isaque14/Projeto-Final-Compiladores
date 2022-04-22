@@ -355,7 +355,7 @@ COMANDO 	: E ';'
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
 				string temp = gentempcode();
-				addSimbolo($2.label, "int", temp);
+				addSimbolo($2.label, "bool", temp);
 		
 				$$.traducao = $2.traducao + $3.traducao + "\t" + temp + " = 0" + ";\n";
 				$$.label = temp;
@@ -401,7 +401,7 @@ COMANDO 	: E ';'
 				// if($5.tipo != "int") 
 				// 	yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
 					
-				addSimbolo($2.label, "int", temp);
+				addSimbolo($2.label, "bool", temp);
 		
 				$$.traducao = "\t" + temp + " = 1" + ";\n";
 				$$.label = "int " + $2.label + " = " + $5.label;
@@ -1138,21 +1138,9 @@ E
 	
 			| TK_ID
 			{
-				bool encontrei = false;
-				TIPO_SIMBOLO variavel;
-				for (int i = 0; i < global_escopo.size(); i++){
-					if(global_escopo[i].nomeVariavel == $1.label){
-						variavel = global_escopo[i];
-						encontrei = true;
-					} 
-				}
-
-				if(!encontrei){
-					yyerror(" erro: a variável '" + $1.label + "' não foi declarada");
-				}
-
+				TIPO_SIMBOLO variavel = getSimbolo($1.label);	
 				$$.tipo = variavel.tipoVariavel;
-				
+				cout << "VER " + $$.tipo + " " + variavel.nomeVariavel << endl;
 				// $$.conteudo = variavel.value;
 				$$.label = gentempcode();
 				addSimbolo(variavel.nomeVariavel, $$.tipo, $$.label);
@@ -1329,9 +1317,10 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 				return tabelaSimbolos[i];
 			}				
 		}
-		contexto -= 1;
+		contexto--;
 		tabelaSimbolos = mapa[contexto];
 	}
+	cout << "Variavel " + variavel + " não declarada";
 	exit(0);
 }
 

@@ -2,9 +2,11 @@ func main()
 {
 	var a int;
 	var b bool = True;
+
+	print(name);
 	
-	while True{
-		print("ok");
+	while b{
+		var name string = "isaque";
 		break;
 	}
 	

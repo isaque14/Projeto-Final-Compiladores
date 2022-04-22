@@ -116,8 +116,6 @@ void yyerror(string);
 
 S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
-				
-
 				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
 				cout << "\nint main(void)\n{\n" <<endl;
@@ -125,19 +123,6 @@ S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
 				cout << declaracoes;
 
 				cout << "\n" + $1.traducao + $6.traducao << "\treturn 0;\n}" << endl;
-
-				cout << "\n*******************\nTamanho mapa " + std::to_string(mapa.size()) << endl; 
-
-				// vector<TIPO_SIMBOLO> aux = mapa[1];
-				// cout << "MAPA ###\n";
-				// for (int i = 0; i <= aux.size() -1; i++){
-				// 	cout << aux[i].tipoVariavel + " " + aux[i].tempVariavel << endl;
-				// }
-				// for (int i = 0; i < global_escopo.size(); i++){
-					
-				// 	cout << std::to_string(i) + " = " + global_escopo[i].nomeVariavel + " / " +global_escopo[i].tempVariavel + "\t" + global_escopo[i].tipoVariavel + "\t" + global_escopo[i].conteudo << endl;
-				// }
-
 			}
 			;
 
@@ -164,20 +149,48 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO COMANDOS
 			{
-				string jump = label_jump();
+				// if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
-				string temp = gentempcode();
+				// string temp = gentempcode();
+				// $$.label = temp;
+				// addSimbolo(temp, "bool", temp);
+				// string lace = genLacecode();
+				// TIPO_LOOP loop = getLace($1.label);	
 				
-				addSimbolo(temp, "bool", temp);
-				string condicao = temp + " = !" + $2.label;
+				// string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
-				"\n\t{\n" +
-			 	$3.traducao +
-				"\t}\n" +
-				"\tFIM_IF_" + jump + ":\n\n" +
-				$4.traducao;
+				// $$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
+				// "\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+				// "\t{\n" +
+			 	// $3.traducao +
+				// "\t}\n" +
+				// "\tgoto " + lace + ";\n" +
+				// loop.fimLaco + ":\n\n" + $4.traducao;
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				// string jump = label_jump();
+
+				// string temp = gentempcode();
+				
+				// addSimbolo(temp, "bool", temp);
+				// string condicao = temp + " = !" + $2.label;
+
+				// $$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+				// "\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
+				// "\n\t{\n" +
+			 	// $3.traducao +
+				// "\t}\n" +
+				// "\tFIM_IF_" + jump + ":\n\n" +
+				// $4.traducao;
 
 			}
 			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
@@ -231,23 +244,8 @@ COMANDOS	: COMANDO COMANDOS
 				"FIM_ELSE_IF_" + jump2 + ":\n\n" + $7.traducao;
 			}
 
-
-			/* | TK_WHILE '(' P ')' BLOCO COMANDOS
-			{
-				$$.label = gentempcode();
-				addTemp($$.label, $3.tipo);
-				string lace = genLacecode();
-				TIPO_LOOP loop = getLace($1.label);
-
-				$$.traducao = lace + $3.traducao + "\t" + $$.label + " = !" +
-				$3.label + ";\n" + "\tIF(" + $$.label + ") goto " + loop.fimLaco + "\n" +
-				$5.traducao + "\tgoto " + lace + "\n\t" + loop.fimLaco + "\n" + $6.traducao;
-			} */
-
-
 			| TK_WHILE E BLOCO COMANDOS 
 			{
-				cout << "tipo " + $2.tipo << endl;
 				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
 				string temp = gentempcode();
@@ -789,17 +787,18 @@ E
 			{
 				string temp = gentempcode();
 				$$.label = temp;
+				$$.tipo = "bool";
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
 				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
-					addSimbolo($$.label, "int", $$.label);
+					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " > " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -809,7 +808,7 @@ E
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -823,6 +822,7 @@ E
 			{
 				string temp = gentempcode();
 				$$.label = temp;
+				$$.tipo = "bool";
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
@@ -833,7 +833,7 @@ E
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -843,7 +843,7 @@ E
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -857,17 +857,18 @@ E
 			{
 				string temp = gentempcode();
 				$$.label = temp;
+				$$.tipo = "bool";
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
 				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
-					addSimbolo($$.label, "int", $$.label);
+					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -877,7 +878,7 @@ E
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -891,17 +892,18 @@ E
 			{
 				string temp = gentempcode();
 				$$.label = temp;
+				$$.tipo = "bool";
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
 				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
-					addSimbolo($$.label, "int", $$.label);
+					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -911,7 +913,7 @@ E
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -925,17 +927,18 @@ E
 			{
 				string temp = gentempcode();
 				$$.label = temp;
+				$$.tipo = "bool";
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
 				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
-					addSimbolo($$.label, "int", $$.label);
+					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " == " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -945,7 +948,7 @@ E
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
-					addSimbolo(temp, "int", temp);
+					addSimbolo(temp, "bool", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
@@ -960,6 +963,7 @@ E
 			{
 				relacionalInvalida($1.tipo, $3.tipo);
 				$$.label = gentempcode();
+				$$.tipo = "bool";
 				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " != " + $3.label + ";\n";
@@ -968,6 +972,7 @@ E
 			| E TK_OU E
 			{
 				$$.label = gentempcode();
+				$$.tipo = "bool";
 				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + 
 				$$.label + " = " + $1.label + " || " + $3.label + ";\n";
@@ -977,6 +982,7 @@ E
 			{
 				cout << "Traduções -> " + $1.traducao + $3.traducao << endl;
 				$$.label = gentempcode();
+				$$.tipo = "bool";
 				addSimbolo($$.label, "bool", $$.label);
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
 			}

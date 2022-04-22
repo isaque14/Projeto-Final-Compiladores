@@ -1,12 +1,7 @@
-var b int = 9;
-print(a);
+
 func main()
 {
-	{
-		var a int;
+	while !0.1{
 
-		{
-			scan(a);
-		}
-	}
+	}	
 }

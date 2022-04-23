@@ -3,8 +3,12 @@ func main()
 {
 	var i int;
 
-	for i = 0; i<10; i++{
+	for i = 0; i <= 10.4; i++{
 		print(i);
+
+		if i == 5{
+			break;
+		}
 	}
 	
 }

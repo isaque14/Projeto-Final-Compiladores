@@ -231,9 +231,9 @@ COMANDOS	: COMANDO COMANDOS
 				string lace = genLacecode();
 				TIPO_LOOP loop = getLace($1.label);	
 				
-				string condicao = temp + " = !" + $2.temp;
+				string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = $2.traducao + lace + ":\n" + "\t" + $2.traducao + "\t" + condicao + ";\n" +
+				$$.traducao = lace + ":\n" + $2.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 			 	$3.traducao +
 				"\tgoto " + lace + ";\n" +
@@ -250,41 +250,14 @@ COMANDOS	: COMANDO COMANDOS
 				string lace = genLacecode();
 				TIPO_LOOP loop = getLace($1.label);	
 				
-				string condicao = temp + " = !" + $4.temp;
+				string condicao = temp + " = !" + $4.label;
 
-				$$.traducao = $2.traducao + lace + ":\n" + "\t" + 
-				$2.label + "\t" + condicao + ";\n" +
+				$$.traducao = lace + ":\n" +  
+				$4.traducao + $2.traducao + "\t" + condicao + ";\n" +
 				$3.traducao +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 				"\tgoto " + lace + ";\n" +
-				loop.fimLaco + ":\n\n" + $4.traducao;
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				// if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
-
-				// string temp = gentempcode();
-				// string jump = label_jump();
-				
-				// addSimbolo(temp, "bool", temp);
-				// string lace = genLacecode();
-				// TIPO_LOOP loop = getLace($1.label);	
-				// string condicao = temp + " = !" + $4.temp;
-
-				// $$.traducao = $4.traducao + "INICIO_DO_WHILE_" + jump + ":\n" + lace + ":\n" +
-				// $2.traducao + "\t" + $4.label + "\t" + condicao + ";\n"
-				// "\tif (" + temp + ") goto " + loop.fimLaco + ";\n" + $2.traducao +
-				// "\tgoto " + lace + ";\n" +
-				// "FIM_DO_WHILE_" + jump + ":\n" + loop.fimLaco + 
-				// ":\n" + $6.traducao;
-
+				loop.fimLaco + ":\n\n" + $6.traducao;
 			}			
 
 			| TK_FOR E ';' E ';' E BLOCO COMANDOS
@@ -297,10 +270,10 @@ COMANDOS	: COMANDO COMANDOS
 				addSimbolo(temp, "bool", temp);
 				string lace = genLacecode();
 				TIPO_LOOP loop = getLace($1.label);
-				string condicao = temp + " =! " + $4.temp;
+				string condicao = temp + " =! " + $4.label;
 
-				$$.traducao = $2.traducao + $4.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
-				"\t" + $4.label + "\t" + condicao + ";\n" +
+				$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
+				$4.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 			 	$7.traducao + $6.traducao +
 				"\tgoto " + lace + ";\n" +
@@ -803,8 +776,6 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " > " + $3.label + ";\n";
-
-					$$.label = $$.label + " = " + $1.label + " > " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -817,8 +788,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " > " + $$.label + ";\n";
+					$$.label = temp;
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -830,8 +800,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " > " + $$.label + ";\n";
+					$$.label = temp;
 				}
 				
 			}
@@ -849,8 +818,6 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " < " + $3.label + ";\n";
-
-					$$.label = $$.label + " = " + $1.label + " < " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -862,8 +829,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " < " + $$.label + ";\n";
+					$$.label = temp;
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -875,8 +841,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " < " + $$.label + ";\n";
+					$$.label = temp;
 				}
 			}
 
@@ -892,8 +857,6 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
-
-					$$.label = $$.label + " = " + $1.label + " >= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -905,8 +868,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					$$.label = temp;
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -918,8 +880,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					$$.label = temp;
 				}
 			}
 			
@@ -935,8 +896,6 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
-
-					$$.label = $$.label + " = " + $1.label + " <= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -948,8 +907,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					$$.label = temp;
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -961,8 +919,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					$$.label = temp;
 				}
 			}
 
@@ -978,8 +935,6 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " == " + $3.label + ";\n";
-
-					$$.label = $$.label + " = " + $1.label + " == " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -990,9 +945,8 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
-
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					
+					$$.label = temp;
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -1004,8 +958,7 @@ E
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
 
-					$$.temp = temp;
-					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
+					$$.label = temp;
 				}
 			}
 
@@ -1195,9 +1148,6 @@ E
 				$$.tipo = variavel.tipoVariavel;
 				$$.label = variavel.tempVariavel;
 				$$.temp = $$.label;
-				// addSimbolo(variavel.nomeVariavel, $$.tipo, $$.label);
-				// $$.traducao = "\t" + $$.label + " = " + variavel.tempVariavel + ";\n";
-				// cout << "TAUZ " + $$.traducao;
 			}
 
 			//CONVERSÃO EXPLÍCITA

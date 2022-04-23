@@ -53,7 +53,7 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "while"     { yylval.label = genLaceNameCode(); pushLoop("while"); return TK_WHILE; }
 "for"       { yylval.label = genLaceNameCode(); pushLoop("for"); return TK_FOR; }
-"do"        { yylval.label = genLaceNameCode(); pushLoop("do"); yylval.traducao = "DO"; return TK_DO; }
+"do"        { yylval.label = genLaceNameCode(); pushLoop("do"); return TK_DO; } //yylval.traducao = "DO";
 
 "{"         { pushContexto(); return *yytext;}
 "}"         { popContexto(); return *yytext;}

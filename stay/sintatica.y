@@ -27,6 +27,7 @@ struct atributos
 	string traducao;
 	string tipo;
 	string conteudo;
+	string temp;
 };
 
 typedef struct
@@ -148,34 +149,7 @@ COMANDOS	: COMANDO COMANDOS
 			}
 
 			| TK_IF E BLOCO COMANDOS
-			{
-				/*if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
-
-				string temp = gentempcode();
-				$$.label = temp;
-				addSimbolo(temp, "bool", temp);
-				// string lace = genLacecode();
-				TIPO_LOOP loop = getLace($1.label);	
-				
-				string condicao = temp + " = !" + $2.label;
-
-				$$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-				"\t{\n" +
-			 	$3.traducao +
-				"\t}\n" +
-				"\tgoto " + lace + ";\n" +
-				loop.fimLaco + ":\n\n" + $4.traducao;
-				
-				 */
-				
-				
-				
-				
-				
-				
-				
-				
+			{				
 				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
 				string temp = gentempcode();
@@ -196,6 +170,7 @@ COMANDOS	: COMANDO COMANDOS
 			}
 			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
 			{
+				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 				string temp = gentempcode();
 
 				string jump1 = label_jump();
@@ -219,6 +194,7 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO TK_ELSE_IF E BLOCO COMANDOS
 			{
+				if($2.tipo != "bool" || $5.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 				string temp = gentempcode();
 				string jump1 = label_jump();
 				string jump2 = label_jump();
@@ -255,48 +231,80 @@ COMANDOS	: COMANDO COMANDOS
 				string lace = genLacecode();
 				TIPO_LOOP loop = getLace($1.label);	
 				
-				string condicao = temp + " = !" + $2.label;
+				string condicao = temp + " = !" + $2.temp;
 
-				$$.traducao = lace + "\n" + $2.traducao + "\t" + condicao + ";\n" +
+				$$.traducao = $2.traducao + lace + ":\n" + "\t" + $2.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-				"\t{\n" +
 			 	$3.traducao +
-				"\t}\n" +
 				"\tgoto " + lace + ";\n" +
 				loop.fimLaco + ":\n\n" + $4.traducao;
 			}
 
 			| TK_DO BLOCO TK_WHILE E ';' COMANDOS
 			{
-				cout << "COMANDOS " + $6.traducao << endl;
-				string temp = gentempcode();
-				string jump = label_jump();
-				
-				addSimbolo(temp, "bool", temp);
-				string condicao = temp + " = !" + $4.label;
+				if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
 
-				$$.traducao = "INICIO_DO_WHILE_" + jump + ":\n" +
-				$2.traducao + $4.traducao + "\t" + condicao + ";\n"
-				"\tif (" + temp + ") goto FIM_DO_WHILE_" + jump + ";\n"
-				"\tgoto INICIO_DO_WHILE_" + jump + ";\n" +
-				"FIM_DO_WHILE_" + jump + ":\n\n" + $6.traducao;
+				string temp = gentempcode();
+				$$.label = temp;
+				addSimbolo(temp, "bool", temp);
+				string lace = genLacecode();
+				TIPO_LOOP loop = getLace($1.label);	
+				
+				string condicao = temp + " = !" + $4.temp;
+
+				$$.traducao = $2.traducao + lace + ":\n" + "\t" + 
+				$2.label + "\t" + condicao + ";\n" +
+				$3.traducao +
+				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+				"\tgoto " + lace + ";\n" +
+				loop.fimLaco + ":\n\n" + $4.traducao;
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				// if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+
+				// string temp = gentempcode();
+				// string jump = label_jump();
+				
+				// addSimbolo(temp, "bool", temp);
+				// string lace = genLacecode();
+				// TIPO_LOOP loop = getLace($1.label);	
+				// string condicao = temp + " = !" + $4.temp;
+
+				// $$.traducao = $4.traducao + "INICIO_DO_WHILE_" + jump + ":\n" + lace + ":\n" +
+				// $2.traducao + "\t" + $4.label + "\t" + condicao + ";\n"
+				// "\tif (" + temp + ") goto " + loop.fimLaco + ";\n" + $2.traducao +
+				// "\tgoto " + lace + ";\n" +
+				// "FIM_DO_WHILE_" + jump + ":\n" + loop.fimLaco + 
+				// ":\n" + $6.traducao;
 
 			}			
 
 			| TK_FOR E ';' E ';' E BLOCO COMANDOS
 			{
+				if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+
 				string temp = gentempcode();
 				string jump = label_jump();
 				
 				addSimbolo(temp, "bool", temp);
-				string condicao = temp + " = !" + $4.label;
+				string lace = genLacecode();
+				TIPO_LOOP loop = getLace($1.label);
+				string condicao = temp + " =! " + $4.temp;
 
-				$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" +
-				$4.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_FOR_" + jump + ";\n" +
+				$$.traducao = $2.traducao + $4.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
+				"\t" + $4.label + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 			 	$7.traducao + $6.traducao +
-				"\tgoto INICIO_FOR_" + jump + ";\n" +
-				"FIM_FOR_" + jump + ":\n\n" + $8.traducao;
+				"\tgoto " + lace + ";\n" +
+				"FIM_FOR_" + jump + ":\n" + loop.fimLaco + ":\n" + $8.traducao;
 			}
 			;
 
@@ -311,7 +319,7 @@ COMANDO 	: E ';'
 			| TK_BREAK ';'
 			{
 				TIPO_LOOP loop = getLaceBreak();
-				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
+				$$.traducao = "\tgoto " + loop.fimLaco + ";\n";
 			}
 
 			| TK_VAR TK_ID TK_TIPO_INT ';'
@@ -766,8 +774,6 @@ E
 
 			| TK_ID TK_MAIS_MAIS
 			{
-				if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
-
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				$$.traducao = $1.traducao + $2.traducao + "\t" + 
 				var1.tempVariavel + " = " + var1.tempVariavel + " + 1" + ";\n";
@@ -775,7 +781,7 @@ E
 
 			| TK_ID TK_MENOS_MENOS
 			{
-				if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
+				// if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
 
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				$$.traducao = $1.traducao + $2.traducao + "\t" + 
@@ -789,6 +795,7 @@ E
 				string temp = gentempcode();
 				$$.label = temp;
 				$$.tipo = "bool";
+				$$.temp = temp;
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
@@ -796,6 +803,8 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " > " + $3.label + ";\n";
+
+					$$.label = $$.label + " = " + $1.label + " > " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -803,9 +812,13 @@ E
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 					
 					$$.label = gentempcode();
+					
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " > " + $$.label + ";\n";
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -816,7 +829,11 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " > " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " > " + $$.label + ";\n";
 				}
+				
 			}
 			
 			| E '<' E
@@ -824,13 +841,16 @@ E
 				string temp = gentempcode();
 				$$.label = temp;
 				$$.tipo = "bool";
+				$$.temp = temp;
 
 				relacionalInvalida($1.tipo, $3.tipo);
 
 				if ($1.tipo == $3.tipo && $1.tipo != "string"){				
-					addSimbolo($$.label, "int", $$.label);
+					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " < " + $3.label + ";\n";
+
+					$$.label = $$.label + " = " + $1.label + " < " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -841,6 +861,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " < " + $$.label + ";\n";
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -851,6 +874,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " < " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " < " + $$.label + ";\n";
 				}
 			}
 
@@ -866,6 +892,8 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " >= " + $3.label + ";\n";
+
+					$$.label = $$.label + " = " + $1.label + " >= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -876,6 +904,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -886,6 +917,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " >= " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 			}
 			
@@ -901,6 +935,8 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " <= " + $3.label + ";\n";
+
+					$$.label = $$.label + " = " + $1.label + " <= " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -911,6 +947,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -921,6 +960,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " <= " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 			}
 
@@ -936,6 +978,8 @@ E
 					addSimbolo($$.label, "bool", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + "\t" + 
 					$$.label + " = " + $1.label + " == " + $3.label + ";\n";
+
+					$$.label = $$.label + " = " + $1.label + " == " + $3.label + ";\n";
 				}
 
 				else if ($1.tipo == "int" && $3.tipo == "float"){
@@ -946,6 +990,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (int) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 
 				else if ($1.tipo == "float" && $3.tipo == "int"){
@@ -956,6 +1003,9 @@ E
 					addSimbolo($$.label, "int", $$.label);
 					$$.traducao = $1.traducao + $3.traducao + $$.traducao + "\t" + $$.label + " = (float) " + $3.label + ";\n" + 
 					"\t" + temp + " = " + $1.label + " == " + $$.label + ";\n";
+
+					$$.temp = temp;
+					$$.label = temp + " = " + $1.label + " >= " + $$.label + ";\n";
 				}
 			}
 
@@ -1000,7 +1050,7 @@ E
 			//OPERADORES DE ATRIBUIÇÃO
 			| TK_ID '=' E
 			{
-				if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
+				if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
 
 				TIPO_SIMBOLO var = getSimbolo($1.label);
 				
@@ -1066,7 +1116,7 @@ E
 
 			| TK_ID '=' TK_TRUE
 			{
-			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
+			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
 
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				$$.label = var1.tempVariavel;
@@ -1076,7 +1126,7 @@ E
 
 			| TK_ID '=' TK_FALSE
 			{
-			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável não Declarada");
+			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
 
 				TIPO_SIMBOLO var1 = getSimbolo($1.label);
 				$$.label = var1.tempVariavel;
@@ -1143,9 +1193,11 @@ E
 			{
 				TIPO_SIMBOLO variavel = getSimbolo($1.label);	
 				$$.tipo = variavel.tipoVariavel;
-				$$.label = gentempcode();
-				addSimbolo(variavel.nomeVariavel, $$.tipo, $$.label);
-				$$.traducao = "\t" + $$.label + " = " + variavel.tempVariavel + ";\n";
+				$$.label = variavel.tempVariavel;
+				$$.temp = $$.label;
+				// addSimbolo(variavel.nomeVariavel, $$.tipo, $$.label);
+				// $$.traducao = "\t" + $$.label + " = " + variavel.tempVariavel + ";\n";
+				// cout << "TAUZ " + $$.traducao;
 			}
 
 			//CONVERSÃO EXPLÍCITA
@@ -1185,7 +1237,7 @@ E
 			| TK_PRINTLN '(' E ')'
 			{
 				$$.traducao = $3.traducao + "\tcout << " + $3.label + " << endl;\n";
-				cout << "tradução " + $3.traducao << endl;
+				// cout << "tradução " + $3.traducao << endl;
 			}
 			
 			| TK_PRINT '(' E ')'
@@ -1223,7 +1275,7 @@ string gentempcode(){
 
 string genLacecode(){
 	var_lace_qnt++;
-	return "_L" + std::to_string(var_lace_qnt) + ":";	
+	return "_L" + std::to_string(var_lace_qnt);	
 }
 
 string genCondcode(){

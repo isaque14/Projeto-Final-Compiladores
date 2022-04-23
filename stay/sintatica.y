@@ -161,10 +161,8 @@ COMANDOS	: COMANDO COMANDOS
 				string condicao = temp + " = !" + $2.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";" +
-				"\n\t{\n" +
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";\n" +
 			 	$3.traducao +
-				"\t}\n" +
 				"\tFIM_IF_" + jump + ":\n\n" +
 				$4.traducao;
 			}
@@ -180,11 +178,9 @@ COMANDOS	: COMANDO COMANDOS
 				string condicao = temp + " = !" + $2.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + ";"
-				"\n\t{\n" +
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + "\n;" +
 			 	$3.traducao +
 				"\tgoto FIM_ELSE_" + jump2 + ";\n" +
-				"\t}\n" +
 				"FIM_IF_" + jump1 + ":\n" +
 				"INICIO_ELSE_" + jump2 + ":\n" +
 				$5.traducao +
@@ -207,11 +203,9 @@ COMANDOS	: COMANDO COMANDOS
 				string condicao2 = temp2 + " = !" + $5.label;
 
 				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + ";"
-				"\n\t{\n" +
+				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + "\n;" +
 			 	$3.traducao +
-				"\t}\n" +
-				"FIM_IF_" + jump1 + ":\n" +
+				"\nFIM_IF_" + jump1 + ":\n" +
 				"INICIO_ELSE_IF_" + jump2 + ":\n" +
 				$5.traducao + "\t" + condicao2 + ";\n" +
 				"\n\tif (" + temp2 + ") goto FIM_ELSE_IF_" + jump2 + ";"
@@ -233,7 +227,7 @@ COMANDOS	: COMANDO COMANDOS
 				
 				string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = lace + ":\n" + $2.traducao + "\t" + condicao + ";\n" +
+				$$.traducao = loop.nomeLaco + ":\n" + lace + ":\n" + $2.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 			 	$3.traducao +
 				"\tgoto " + lace + ";\n" +
@@ -254,7 +248,7 @@ COMANDOS	: COMANDO COMANDOS
 
 				$$.traducao = lace + ":\n" +  
 				$4.traducao + $2.traducao + "\t" + condicao + ";\n" +
-				$3.traducao +
+				$3.traducao + loop.nomeLaco + ":\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
 				"\tgoto " + lace + ";\n" +
 				loop.fimLaco + ":\n\n" + $6.traducao;
@@ -275,7 +269,7 @@ COMANDOS	: COMANDO COMANDOS
 				$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
 				$4.traducao + "\t" + condicao + ";\n" +
 				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-			 	$7.traducao + $6.traducao +
+			 	$7.traducao + loop.nomeLaco + ":\n" + $6.traducao +
 				"\tgoto " + lace + ";\n" +
 				"FIM_FOR_" + jump + ":\n" + loop.fimLaco + ":\n" + $8.traducao;
 			}
@@ -293,6 +287,12 @@ COMANDO 	: E ';'
 			{
 				TIPO_LOOP loop = getLaceBreak();
 				$$.traducao = "\tgoto " + loop.fimLaco + ";\n";
+			}
+
+			| TK_CONTINUE ';'
+			{
+				TIPO_LOOP loop = getLaceBreak();
+				$$.traducao = "\tgoto " + loop.nomeLaco + ";\n";
 			}
 
 			| TK_VAR TK_ID TK_TIPO_INT ';'
@@ -1423,7 +1423,7 @@ TIPO_LOOP getLaceBreak(){
 	int size = tabelaLoop.size();
 
 	if(size == 0){
-		yyerror("erro: comando break fora de laco");
+		yyerror("erro: comando continue/break fora de laco");
 	}
 
 	return tabelaLoop[size - 1];

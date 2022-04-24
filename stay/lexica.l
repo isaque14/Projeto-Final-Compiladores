@@ -22,7 +22,7 @@ ID {LETRA}({LETRA}|{NUM})*
 
 {DELIM} 	{}
 
-"main"		{ return TK_MAIN; }
+"func main"	{ return TK_MAIN; }
 
 "func"      { return TK_FUNC; }
 

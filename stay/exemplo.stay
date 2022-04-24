@@ -1,18 +1,14 @@
-var a int;
 
-func string soma(result string){
-		return a;	
+func void teste(a int){
+	print("ok");
+	return 1;
 }
-
-func void soma(result string){
-		return a;	
-}
-
-
 
 func main()
 {
-	
-	
+	{
+		print("ok");
+		return 1;
+	}
 }
 

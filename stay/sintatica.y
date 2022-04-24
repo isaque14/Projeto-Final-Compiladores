@@ -28,7 +28,7 @@ struct atributos
 	string tipo;
 	string conteudo;
 	string temp;
-	bool temRetorno;
+	bool temRetorno = false;
 	string varRetorno;
 	string conteudoRetorno;
 };
@@ -131,7 +131,7 @@ void yyerror(string);
 
 %%
 
-S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
+S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 			{
 				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
@@ -141,22 +141,33 @@ S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
 				
 				cout << declaracoes;
 
-				cout << "\n" + $6.traducao << "\treturn 0;\n}" << endl;
+				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
 
 				cout << $1.traducao << endl;
-
-
-				cout << "****************\n";
-				cout << "BuscaFun\n";
-				TIPO_FUNC aux = getFunc("soma");
-				cout << aux.nomeFunc << endl;
-
 			}
 			;
 
 BLOCO		: '{' COMANDOS '}'
 			{
 				$$.traducao = $2.traducao;
+			}
+
+			| '{' COMANDOS RETORNO '}'
+			{
+				$$.temRetorno = true;
+				$$.traducao = $2.traducao + $3.traducao;
+			}
+
+			| '{' RETORNO COMANDOS '}'
+			{
+				$$.temRetorno = true;
+				$$.traducao = $2.traducao + $3.traducao;
+			}
+
+			| '{' COMANDOS RETORNO COMANDOS '}'
+			{
+				$$.temRetorno = true;
+				$$.traducao = $1.traducao + $2.traducao + $3.traducao;
 			}
 			;
 
@@ -217,7 +228,7 @@ FUNCOES 	: DECLARA_FUNCAO FUNCOES
 DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
-					// if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
+					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 
@@ -229,6 +240,7 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				| TK_FUNC TK_TIPO_FLOAT TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
+					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 					addFunc($3.label, "float");
@@ -239,6 +251,7 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				| TK_FUNC TK_TIPO_BOOL TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
+					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 					addFunc($3.label, "bool");
@@ -249,6 +262,7 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				| TK_FUNC TK_TIPO_CHAR TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
+					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 					addFunc($3.label, "char");
@@ -259,6 +273,7 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				| TK_FUNC TK_TIPO_STRING TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
+					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 					addFunc($3.label, "string");
@@ -269,6 +284,7 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 				| TK_FUNC TK_TIPO_VOID TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
+					if ($7.temRetorno) yyerror("erro: A função do tipo void (" + $3.label + ") não deve possuir retorno.\n");
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 					addFunc($3.label, "void");
@@ -448,12 +464,6 @@ COMANDOS	: COMANDO COMANDOS
 			} */
 
 COMANDO 	: E ';'
-			
-			| RETORNO
-			{
-				$$.temRetorno = $1.temRetorno; 
-				$$.traducao = $1.traducao;
-			}
 
 			| TK_BREAK ';'
 			{

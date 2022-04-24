@@ -163,13 +163,37 @@ ATRIBUTOS 	: ATRIBUTO
 			{
 				$$.traducao = $1.traducao + ", " + $3.traducao;
 			}
+
+			|
+			{
+
+			}
 			;
 
 
 ATRIBUTO 	: TK_ID TK_TIPO_INT
 			{
-				TIPO_SIMBOLO var = getSimbolo($1.label);
-				$$.traducao = var.tempVariavel + " int";
+				$$.traducao = $1.label + " int";
+			}
+
+			| TK_ID TK_TIPO_FLOAT
+			{
+				$$.traducao = $1.label + " float";
+			}
+
+			| TK_ID TK_TIPO_BOOL
+			{
+				$$.traducao = $1.label + " bool";
+			}
+
+			| TK_ID TK_TIPO_CHAR
+			{
+				$$.traducao = $1.label + " char";
+			}
+
+			| TK_ID TK_TIPO_STRING
+			{
+				$$.traducao = $1.label + " string";
 			}
 			;
 

@@ -1,7 +1,7 @@
 var a int = 2;
 var b int = 6;
 
-func int soma(a int, b int){
+func int soma(result string, valor int){
 	return a + b;	
 }
 

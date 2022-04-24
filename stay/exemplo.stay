@@ -1,12 +1,12 @@
+var a int = 2;
+var b int = 6;
+
+func int soma(a int, b int){
+	return a + b;	
+}
 
 func main()
 {
-	var i int;
 	
-	for i = 0; i < 10; i++{
-		if i < 5{
-			continue;
-		}
-		print(i);
-	}
 }
+

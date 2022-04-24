@@ -28,6 +28,9 @@ struct atributos
 	string tipo;
 	string conteudo;
 	string temp;
+	bool temRetorno;
+	string varRetorno;
+	string conteudoRetorno;
 };
 
 typedef struct
@@ -53,9 +56,18 @@ typedef struct
 	string caracter;
 } TABELA_ASCII;
 
+typedef struct
+{
+	string nomeFunc;
+	string tipo;
+	string varRetorno;
+	string conteudoRetorno;
+} TIPO_FUNC;
+
 
 vector<TIPO_LOOP> tabelaLoop;
 vector<vector<TIPO_SIMBOLO>> mapa;
+vector<TIPO_FUNC> tabelaFunc;
 int contextoGlobal;
 
 
@@ -94,6 +106,10 @@ void pushLoop(string tipo);
 TIPO_LOOP getLace(string nome);
 TIPO_LOOP getLaceBreak();
 
+void addFunc(string nome, string tipo, string varRetorno, string conteudoRetorno);
+TIPO_FUNC getFunc(string func);
+bool buscaFunc(string func);
+
 
 int yylex(void);
 void yyerror(string);
@@ -102,7 +118,7 @@ void yyerror(string);
 %token TK_NUM TK_REAL TK_CHAR TK_STRING
 %token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL TK_TIPO_CHAR TK_TIPO_STRING
 %token TK_MAIOR_IGUAL TK_MENOR_IGUAL TK_IGUAL_IGUAL TK_DIFERENTE TK_MAIS_MAIS TK_MENOS_MENOS TK_OU TK_E
-%token TK_FUNC
+%token TK_FUNC TK_RETURN TK_TIPO_VOID
 %token TK_INCREMENT
 %token TK_FIM TK_ERROR
 %token TK_TRUE TK_FALSE
@@ -119,11 +135,15 @@ S 			: COMANDOS TK_FUNC TK_MAIN '(' ')' BLOCO
 			{
 				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 				
+				// cout << $7.traducao;
+
 				cout << "\nint main(void)\n{\n" <<endl;
 				
 				cout << declaracoes;
 
-				cout << "\n" + $1.traducao + $6.traducao << "\treturn 0;\n}" << endl;
+				cout << "\n" + $6.traducao << "\treturn 0;\n}" << endl;
+
+				cout << $1.traducao << endl;
 			}
 			;
 
@@ -133,7 +153,105 @@ BLOCO		: '{' COMANDOS '}'
 			}
 			;
 
-COMANDOS	: COMANDO COMANDOS
+
+ATRIBUTOS 	: ATRIBUTO
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| ATRIBUTO ',' ATRIBUTOS
+			{
+				$$.traducao = $1.traducao + ", " + $3.traducao;
+			}
+			;
+
+
+ATRIBUTO 	: TK_ID TK_TIPO_INT
+			{
+				TIPO_SIMBOLO var = getSimbolo($1.label);
+				$$.traducao = var.tempVariavel + " int";
+			}
+			;
+
+DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+					// if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "int " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}
+
+				| TK_FUNC TK_TIPO_FLOAT TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "float " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}
+
+				| TK_FUNC TK_TIPO_BOOL TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "bool " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}	
+
+				| TK_FUNC TK_TIPO_CHAR TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "char " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}
+
+				| TK_FUNC TK_TIPO_STRING TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "string " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}
+
+				| TK_FUNC TK_TIPO_VOID TK_ID '(' ATRIBUTOS ')' BLOCO
+				{
+					bool encontrei = buscaFunc($3.label);
+
+					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+
+					$$.traducao = "void " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+				}
+
+				;
+
+CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')' ';'
+				{
+					TIPO_FUNC aux = getFunc($1.label);
+					$$.label = aux.nomeFunc;
+					$$.tipo = aux.tipo;
+					$$.traducao = aux.nomeFunc + "(" + $3.traducao + ")\n";
+				}
+				;
+
+RETORNO 	: TK_RETURN E ';'
+			{
+				$$.temRetorno = true;
+				$$.label = "return";
+				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
+			}
+
+COMANDOS	: DECLARA_FUNCAO
+			{
+				$$.traducao = $1.traducao;
+			}			
+
+			| COMANDO COMANDOS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
 			}
@@ -283,6 +401,12 @@ COMANDOS	: COMANDO COMANDOS
 
 COMANDO 	: E ';'
 			
+			| RETORNO
+			{
+				$$.temRetorno = $1.temRetorno; 
+				$$.traducao = $1.traducao;
+			}
+
 			| TK_BREAK ';'
 			{
 				TIPO_LOOP loop = getLaceBreak();
@@ -1001,6 +1125,20 @@ E
 			}
 
 			//OPERADORES DE ATRIBUIÇÃO
+			| TK_ID '=' CHAMA_FUNCAO 
+			{
+				// if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
+
+				// TIPO_SIMBOLO var = getSimbolo($1.label);
+
+				// if(var.tipoVariavel == $3.tipo){
+				// 	if (var.tipoVariavel == "string"){
+				// 		cout << "$3.traducao no = " + $3.traducao << endl;
+				// 		$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
+				// 	}
+				// }
+			}
+						
 			| TK_ID '=' E
 			{
 				if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
@@ -1433,4 +1571,41 @@ TIPO_LOOP getLaceBreak(){
 void contadorDeLinha(){
 	var_linha_qnt++;
 	contLinha = std::to_string(var_linha_qnt);
+}
+
+void addFunc(string nome, string tipo, string varRetorno, string conteudoRetorno){
+	TIPO_FUNC new_func;
+	new_func.nomeFunc = nome;
+	new_func.tipo = tipo;
+	new_func.varRetorno = varRetorno;
+	new_func.conteudoRetorno = conteudoRetorno;
+
+	tabelaFunc.push_back(new_func);
+}
+
+TIPO_FUNC getFunc(string func){
+	for (int i = tabelaFunc.size() - 1; i >= 0; i--)
+	{
+		if(tabelaFunc[i].nomeFunc == func)
+		{
+			return tabelaFunc[i];
+		}				
+	}
+	
+	cout << "Função " + func + " não declarada";
+	exit(0);
+}
+
+bool buscaFunc(string func){
+	for (int i = tabelaFunc.size() - 1; i >= 0; i--)
+	{
+
+		cout << tabelaFunc[i].nomeFunc + " == " + func + " ?\n";
+		if(tabelaFunc[i].nomeFunc == func)
+		{
+			return true;
+		}				
+	}
+	
+	return false;
 }

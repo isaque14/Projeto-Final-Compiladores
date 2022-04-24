@@ -26,16 +26,16 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "func"      { return TK_FUNC; }
 
+"return"    { return TK_RETURN; }
+
 "var"       { return TK_VAR; }
 
 "int"		{ return TK_TIPO_INT; }
-
 "float"		{ return TK_TIPO_FLOAT; }
-
 "bool"		{ return TK_TIPO_BOOL; }
-
 "char"      { return TK_TIPO_CHAR; }
 "string"    { return TK_TIPO_STRING; }
+"void"      { return TK_TIPO_VOID; }
 
 "True"      { return TK_TRUE; }
 "False"     { return TK_FALSE; }
@@ -64,6 +64,7 @@ ID {LETRA}({LETRA}|{NUM})*
 
 [+\-*/%!&|<>""'']	{ return *yytext; }
 
+","         { return *yytext; }
 
 "="		    { return *yytext; }
 

@@ -1,8 +1,9 @@
 
 func main()
 {
-	var a[8] string;
+	var num int = 9;
 	
+	var v[5] float = 1.6, 6.6, 8.6; 
 
 }
 

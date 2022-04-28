@@ -93,7 +93,7 @@ void print_table();
 bool buscaVariavel(string variavel);
 void addSimbolo(string nome, string tipo, string temp);
 void addStr(string nome, string tipo, string temp, string conteudo);
-void addVector(string nome, string tipo, string temp, string vetor);
+void addVector(string nome, string tipo, string temp, string vetor, string conteudo);
 TIPO_SIMBOLO getSimbolo(string variavel);
 string cast(string tipo1, string tipo2);
 bool comparaTipo(string tipo1, string tipo2);
@@ -512,6 +512,87 @@ COMANDOS	: COMANDO COMANDOS
 				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
 			} */
 
+
+INICIALIZA_MULTI 	: INICIALIZA
+					{
+						$$.label = $1.label;
+						$$.tipo = $1.tipo;
+						$$.conteudo = $1.conteudo;
+						$$.traducao = $1.traducao;
+					}
+
+					| INICIALIZA ',' INICIALIZA_MULTI
+					{
+						if ($1.tipo != $3.tipo) yyerror("erro: O valor (" + $2.label + ") é diferente do tipo do vetor" );
+
+						$$.tipo = $1.tipo;
+						
+						$$.conteudo = $1.conteudo + ", " + $3.conteudo;
+						$$.traducao = $1.traducao + $3.traducao;
+
+						// cout << "VERIFICAÇÂO " + $1.conteudo + ", " + $3.conteudo << endl;
+					}
+
+INICIALIZA 	: TK_NUM
+			{
+				$$.tipo = "int";
+				$$.conteudo = $1.label;
+				$$.label = gentempcode();
+				addSimbolo($$.label, $$.tipo, $$.label);
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+			}
+
+			| TK_REAL
+			{
+				$$.tipo = "float";
+				$$.conteudo = $1.label;
+				$$.label = gentempcode();
+				addSimbolo($$.label, $$.tipo, $$.label);
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+			
+			}
+
+			| TK_CHAR
+			{
+				$$.tipo = "char";
+				$$.conteudo = $1.label;
+				$$.label = gentempcode();
+				addSimbolo($$.label, $$.tipo, $$.label);
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+			}
+
+			| TK_STRING
+			{
+				$$.tipo = "string";
+				$$.conteudo = $$.label;
+				$$.label = gentempcode();
+				addStr($$.label, $$.tipo, $$.label, $$.conteudo);
+				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				$$.traducao = "\tstrcpy(" + $$.label + ", " + $1.label + ");\t//"+ $$.label +"\n";	
+				// cout << "traducao 1 " + $$.traducao << endl;	
+			}
+
+			| TK_TRUE
+			{
+				$$.tipo = "bool";
+				$$.conteudo = "1";
+				$$.label_bool = "True";
+				$$.label = gentempcode();
+				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.label);
+			}
+
+			| TK_FALSE
+			{
+				$$.tipo = "bool";
+				$$.conteudo = "0";
+				$$.label_bool = "False";
+				$$.label = gentempcode();
+				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
+				addSimbolo($$.label, $$.tipo, $$.label);
+			}
+			;
+
 TIPO 		: TK_TIPO_INT
 			{
 				$$.tipo = "int";
@@ -562,7 +643,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
 				if ($3.isVector){
-					addVector($2.label, $$.tipo, temp, $3.vetor);
+					addVector($2.label, $$.tipo, temp, $3.vetor, "0");
 				}
 
 				else if ($3.tipo == "int"){
@@ -602,7 +683,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				}
 			}
 
-			| TK_VAR TK_ID TIPO '=' E 
+			| TK_VAR TK_ID TIPO '=' INICIALIZA_MULTI 
 			{
 				$$.tipo = $3.tipo;
 				bool encontrei = buscaVariavel($2.label); 
@@ -611,8 +692,14 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
 				
+
+				if ($3.isVector){
+					if ($3.tipo != $5.tipo) yyerror("erro: Não é permirtido tipos diferentes na inicialização do vetor (" + $2.label + ")");
 				
-				if ($3.tipo == $5.tipo && $3.tipo == "string"){
+					addVector($2.label, $3.tipo, temp, $3.vetor, $5.conteudo);
+				}
+				
+				else if ($3.tipo == $5.tipo && $3.tipo == "string"){
 					addStr($2.label, "string", temp, $5.conteudo);
 					$$.traducao = $5.traducao + "\tstrcpy(" + temp + ", " + $5.label + ");\n"; 
 				}
@@ -625,14 +712,14 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					$$.label = $3.tipo + $2.label + " = " + $5.label;
 				}
 
-				if($3.tipo == "bool"){ 
+				else if($3.tipo == "bool"){ 
 					if($5.tipo != "bool"){
 						yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo bool" );
 					}
 						
 					addSimbolo($2.label, "bool", temp);
- 					string val_bool;
-					 
+					string val_bool;
+					
 					if ($5.label_bool == "True") val_bool = "1";
 					else val_bool = "0";
 
@@ -640,8 +727,10 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					$$.label = "int " + $2.label + " = " + $5.label;
 				}
 
-				if ($3.tipo == "int"){
+				else if ($3.tipo == "int"){
+					cout << "primeiro é inteiro\n";
 					if ($5.tipo == "float"){
+						cout << "segundo é float\n";
 						addSimbolo($2.label, "int", temp);
 						$$.traducao = "\t" + temp + " = 0" + ";\n"; 
 						
@@ -662,7 +751,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					}
 				}
 
-				if ($3.tipo == "float"){
+				else if ($3.tipo == "float"){
 					if ($5.tipo == "int"){
 					addSimbolo($2.label, "float", temp);
 					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
@@ -674,7 +763,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					}
 				}
 
-				if ($3.tipo == "char"){
+				else if ($3.tipo == "char"){
 					if ($5.tipo == "int"){
 						addSimbolo($2.label, "char", temp);
 						$$.traducao = "\t" + temp + " = 0" + ";\n"; 
@@ -698,7 +787,6 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 				else yyerror("Atribuição inválida para a variável (" + $2.label + ")");
 			}
-
 			;
 
 
@@ -711,7 +799,15 @@ VETOR 	: '[' TK_NUM ']'
 		| '['  TK_ID ']'
 		{
 			TIPO_SIMBOLO var = getSimbolo($2.label);
+			if (var.tipoVariavel != "int") yyerror("erro: Tamanho do vetor (" + var.nomeVariavel + ") deve ser um inteiro");
 			$$.label = "[" + var.tempVariavel + "]";
+			$$.traducao = "[" + var.tempVariavel + "]";
+		}
+
+		| '[' ']'
+		{
+			$$.label = "[]";
+			$$.traducao = $$.label;
 		}
 		;
 
@@ -1521,12 +1617,13 @@ void addStr(string nome, string tipo, string temp, string conteudo){
 	print_var(var);		
 }
 
-void addVector(string nome, string tipo, string temp, string vetor){
+void addVector(string nome, string tipo, string temp, string vetor, string conteudo){
 	TIPO_SIMBOLO var;
 	var.nomeVariavel = nome;
 	var.tipoVariavel = tipo;
 	var.tempVariavel = temp;
 	var.vetor = vetor;
+	var.conteudo = conteudo;
 
 	int contexto = mapa.size() - 1;
 	mapa[contexto].push_back(var);		
@@ -1547,8 +1644,11 @@ void print_var(TIPO_SIMBOLO var){
 			declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + "[" + std::to_string(size) + "];\t//" + var.nomeVariavel + "\n";
 		}
 	}
+	else if (var.vetor != ""){
+		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + var.vetor + " = {" + var.conteudo + "};\n";
+	}
 	else{
-		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + var.vetor + ";\n";
+		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + ";\n";
 	}			
 
 }

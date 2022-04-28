@@ -1,14 +1,8 @@
 
-func void teste(a int){
-	print("ok");
-	return 1;
-}
-
 func main()
 {
-	{
-		print("ok");
-		return 1;
-	}
+	var a[8] string;
+	
+
 }
 

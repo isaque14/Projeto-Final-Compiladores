@@ -31,6 +31,9 @@ struct atributos
 	bool temRetorno = false;
 	string varRetorno;
 	string conteudoRetorno;
+	string label_bool;
+	bool isVector;
+	string vetor;
 };
 
 typedef struct
@@ -40,6 +43,7 @@ typedef struct
 	string tempVariavel;
 	string strSize;
 	string conteudo;
+	string vetor;
 } TIPO_SIMBOLO;
 
 typedef struct
@@ -89,6 +93,7 @@ void print_table();
 bool buscaVariavel(string variavel);
 void addSimbolo(string nome, string tipo, string temp);
 void addStr(string nome, string tipo, string temp, string conteudo);
+void addVector(string nome, string tipo, string temp, string vetor);
 TIPO_SIMBOLO getSimbolo(string variavel);
 string cast(string tipo1, string tipo2);
 bool comparaTipo(string tipo1, string tipo2);
@@ -215,6 +220,49 @@ ATRIBUTO 	: TK_ID TK_TIPO_INT
 			}
 			;
 
+PARAMETROS_CHAMADA	: PARAMETRO
+					{
+						cout << "Um parâmetro\n";
+						$$.traducao = $1.traducao;
+					}
+
+					| PARAMETRO PARAMETROS_CHAMADA
+					{
+						$$.traducao = $1.traducao + $2.traducao;
+					}
+
+					|
+					{
+						cout << "Nenhum PArametro\n";;
+					}
+
+PARAMETRO 	: TK_ID TK_TIPO_INT
+			{
+				TIPO_SIMBOLO var = getSimbolo($1.label);
+				$$.traducao = $1.label + " int";
+			}
+
+			| TK_ID TK_TIPO_FLOAT
+			{
+				$$.traducao = $1.label + " float";
+			}
+
+			| TK_ID TK_TIPO_BOOL
+			{
+				$$.traducao = $1.label + " bool";
+			}
+
+			| TK_ID TK_TIPO_CHAR
+			{
+				$$.traducao = $1.label + " char";
+			}
+
+			| TK_ID TK_TIPO_STRING
+			{
+				$$.traducao = $1.label + " string";
+			}
+			;
+
 FUNCOES 	: DECLARA_FUNCAO FUNCOES
 			{
 				$$.traducao = $1.traducao + $2.traducao;
@@ -296,10 +344,11 @@ DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
 
 CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')' ';'
 				{
-					TIPO_FUNC aux = getFunc($1.label);
-					$$.label = aux.nomeFunc;
-					$$.tipo = aux.tipo;
-					$$.traducao = aux.nomeFunc + "(" + $3.traducao + ")\n";
+					cout << "BUSCA Func Chamada\n";
+					// TIPO_FUNC aux = getFunc($1.label);
+					// $$.label = aux.nomeFunc;
+					// $$.tipo = aux.tipo;
+					// $$.traducao = aux.nomeFunc + "(" + $3.traducao + ")\n";
 				}
 				;
 
@@ -463,7 +512,220 @@ COMANDOS	: COMANDO COMANDOS
 				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
 			} */
 
+TIPO 		: TK_TIPO_INT
+			{
+				$$.tipo = "int";
+				$$.traducao = "int";
+			}
+
+			| TK_TIPO_FLOAT
+			{
+				$$.tipo = "float";
+				$$.traducao = "float";
+			}
+
+			| TK_TIPO_BOOL
+			{
+				$$.tipo = "bool";
+				// $$.traducao = "bool";
+			}
+
+			| TK_TIPO_CHAR
+			{
+				$$.tipo = "char";
+				$$.traducao = "char";
+			}
+
+			| TK_TIPO_STRING
+			{
+				$$.tipo = "string";
+				$$.traducao = "string";
+			}
+
+			| VETOR TIPO
+			{
+				$$.tipo = $2.tipo;
+				$$.isVector = true;
+				$$.vetor = $1.traducao;
+				$$.traducao = $1.traducao + $2.traducao;
+			}
+			;
+
+DECLARA_VAR : TK_VAR TK_ID TIPO 
+			{
+				cout << "teste vet " + $3.traducao;
+				bool encontrei = buscaVariavel($2.label);
+				string temp = gentempcode();
+				$$.tipo = $3.tipo;
+			
+				if(encontrei)
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+				
+				if ($3.isVector){
+					addVector($2.label, $$.tipo, temp, $3.vetor);
+				}
+
+				else if ($3.tipo == "int"){
+					addSimbolo($2.label, "int", temp);
+			
+					$$.traducao = "\t" + temp + " = 0" + ";\n";
+					$$.label = "int " + $2.label;
+				}
+
+				else if ($3.tipo == "float"){
+					addSimbolo($2.label, "float", temp);
+		
+					$$.traducao = "\t" + temp + " = 0.0" + ";\n";
+					$$.label = "float " + $2.label;
+				}
+
+				else if ($3.tipo == "bool"){
+					string temp = gentempcode();
+					addSimbolo($2.label, "bool", temp);
+			
+					$$.traducao = $2.traducao + $3.traducao + "\t" + temp + " = 0" + ";\n";
+					$$.label = temp;
+				}
+
+				else if ($3.tipo == "char"){
+					addSimbolo($2.label, "char",  temp);
+			
+					$$.traducao = "\t" + temp + " = " + "'" + "\0" +"'" + ";\n";
+					$$.label = "int " + $2.label;
+				}
+
+				else if ($3.tipo == "string"){
+					addStr($2.label, "string",  temp, "\0");
+					// $$.traducao = "\tstrcpy(" + temp + ", " + "\\0" + ");\n";
+					$$.label = "\tstrcpy(" + temp + ", " + "\"\\0\"" + ");\n";
+					//  $$.traducao = "\t" + temp + " = " + "'" + "\\0" + "'" + ";\n";
+				}
+			}
+
+			| TK_VAR TK_ID TIPO '=' E 
+			{
+				$$.tipo = $3.tipo;
+				bool encontrei = buscaVariavel($2.label); 
+				string temp = gentempcode();
+
+				if(encontrei)
+					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+				
+				
+				if ($3.tipo == $5.tipo && $3.tipo == "string"){
+					addStr($2.label, "string", temp, $5.conteudo);
+					$$.traducao = $5.traducao + "\tstrcpy(" + temp + ", " + $5.label + ");\n"; 
+				}
+
+				
+				else if ($3.tipo == $5.tipo){
+					addSimbolo($2.label, $3.tipo, temp);
+			
+					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
+					$$.label = $3.tipo + $2.label + " = " + $5.label;
+				}
+
+				if($3.tipo == "bool"){ 
+					if($5.tipo != "bool"){
+						yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo bool" );
+					}
+						
+					addSimbolo($2.label, "bool", temp);
+ 					string val_bool;
+					 
+					if ($5.label_bool == "True") val_bool = "1";
+					else val_bool = "0";
+
+					$$.traducao = "\t" + temp + " = " + val_bool + ";\n";
+					$$.label = "int " + $2.label + " = " + $5.label;
+				}
+
+				if ($3.tipo == "int"){
+					if ($5.tipo == "float"){
+						addSimbolo($2.label, "int", temp);
+						$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+						
+						$$.label = gentempcode();
+						addSimbolo($$.label, "int", $$.label);
+						$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
+						"\t" + temp + " = " + $$.label + ";\n";
+					}
+
+					if ($5.tipo == "char"){
+						addSimbolo($2.label, "int", temp);
+						// $$.traducao = "\t" + temp + " = 0" + ";\n"; 
+						
+						$$.label = gentempcode();
+						addSimbolo($$.label, "int", $$.label);
+						$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
+						"\t" + temp + " = " + $$.label + ";\n";
+					}
+				}
+
+				if ($3.tipo == "float"){
+					if ($5.tipo == "int"){
+					addSimbolo($2.label, "float", temp);
+					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+					
+					$$.label = gentempcode();
+					addSimbolo($$.label, "float", $$.label);
+					$$.traducao = $5.traducao + "\t" + $$.label + " = (float) " + $5.label + ";\n" + 
+					"\t" + temp + " = " + $$.label + ";\n";
+					}
+				}
+
+				if ($3.tipo == "char"){
+					if ($5.tipo == "int"){
+						addSimbolo($2.label, "char", temp);
+						$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+						
+						$$.label = gentempcode();
+						addSimbolo($$.label, "char", $$.label);
+						$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
+						"\t" + temp + " = " + $$.label + ";\n";
+					}
+
+					if ($5.tipo == "float"){
+						addSimbolo($2.label, "char", temp);
+						$$.traducao = "\t" + temp + " = 0" + ";\n"; 
+						
+						$$.label = gentempcode();
+						addSimbolo($$.label, "char", $$.label);
+						$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
+						"\t" + temp + " = " + $$.label + ";\n";
+					}
+				}
+
+				else yyerror("Atribuição inválida para a variável (" + $2.label + ")");
+			}
+
+			;
+
+
+VETOR 	: '[' TK_NUM ']'
+		{
+			$$.label = "[" + $2.label + "]";
+			$$.traducao = $$.label;
+		}
+
+		| '['  TK_ID ']'
+		{
+			TIPO_SIMBOLO var = getSimbolo($2.label);
+			$$.label = "[" + var.tempVariavel + "]";
+		}
+		;
+
 COMANDO 	: E ';'
+
+			| DECLARA_VAR 
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| DECLARA_VAR ';' 
+			{
+				$$.traducao = $1.traducao;
+			}
 
 			| TK_BREAK ';'
 			{
@@ -475,230 +737,6 @@ COMANDO 	: E ';'
 			{
 				TIPO_LOOP loop = getLaceBreak();
 				$$.traducao = "\tgoto " + loop.nomeLaco + ";\n";
-			}
-
-			| TK_VAR TK_ID TK_TIPO_INT ';'
-			{
-				bool encontrei = buscaVariavel($2.label);
-				string temp = gentempcode();
-			
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				addSimbolo($2.label, "int", temp);
-		
-				$$.traducao = "\t" + temp + " = 0" + ";\n";
-				$$.label = "int " + $2.label;
-			}
-
-			| TK_VAR TK_ID TK_TIPO_FLOAT ';'
-			{
-				bool encontrei = buscaVariavel($2.label);
-				string temp = gentempcode();
-
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				addSimbolo($2.label, "float", temp);
-		
-				$$.traducao = "\t" + temp + " = 0.0" + ";\n";
-				$$.label = "float " + $2.label;
-			}
-
-			| TK_VAR TK_ID TK_TIPO_BOOL ';' 
-			{
-				bool encontrei = buscaVariavel($2.label);
-				
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				string temp = gentempcode();
-				addSimbolo($2.label, "bool", temp);
-		
-				$$.traducao = $2.traducao + $3.traducao + "\t" + temp + " = 0" + ";\n";
-				$$.label = temp;
-			}
-
-			| TK_VAR TK_ID TK_TIPO_CHAR ';' 
-			{
-				bool encontrei = buscaVariavel($2.label); 
-				string temp = gentempcode();
-
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
-				
-				addSimbolo($2.label, "char",  temp);
-		
-				$$.traducao = "\t" + temp + " = " + "'" + "\0" +"'" + ";\n";
-				$$.label = "int " + $2.label;
-			}
-
-			| TK_VAR TK_ID TK_TIPO_STRING ';' 
-			{
-				bool encontrei = buscaVariavel($2.label); 
-				string temp = gentempcode();
-
-				cout << "var = " + $2.label << endl;
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
-				
-				addStr($2.label, "string",  temp, "\0");
-				// $$.traducao = "\tstrcpy(" + temp + ", " + "\\0" + ");\n";
-				$$.label = "\tstrcpy(" + temp + ", " + "\"\\0\"" + ");\n";
-				//  $$.traducao = "\t" + temp + " = " + "'" + "\\0" + "'" + ";\n";
-			}
-
-			| TK_VAR TK_ID TK_TIPO_BOOL '=' TK_TRUE ';' 
-			{
-				bool encontrei = buscaVariavel($2.label); 
-				string temp = gentempcode();
-
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				// if($5.tipo != "int") 
-				// 	yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo int" );
-					
-				addSimbolo($2.label, "bool", temp);
-		
-				$$.traducao = "\t" + temp + " = 1" + ";\n";
-				$$.label = "int " + $2.label + " = " + $5.label;
-				
-			}
-
-			| TK_VAR TK_ID TK_TIPO_BOOL '=' TK_FALSE ';' 
-			{
-				bool encontrei = buscaVariavel($2.label); 
-				string temp = gentempcode();
-
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				addSimbolo($2.label, "bool", temp);
-		
-				$$.traducao = "\t" + temp + " = 0" + ";\n";
-				$$.label = "int " + $2.label + " = " + $5.label;
-			}
-
-			| TK_VAR TK_ID TK_TIPO_INT '=' E ';' 
-			{
-				string temp = gentempcode();
-				
-				bool encontrei = buscaVariavel($2.label); 
-				
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				if($5.tipo == "int"){ 
-
-					addSimbolo($2.label, "int", temp);
-			
-					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
-					$$.label = "int " + $2.label + " = " + $5.label;
-				}
-
-				else if ($5.tipo == "float"){
-					addSimbolo($2.label, "int", temp);
-					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
-					
-					$$.label = gentempcode();
-					addSimbolo($$.label, "int", $$.label);
-					$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
-					"\t" + temp + " = " + $$.label + ";\n";
-				}
-
-				else if ($5.tipo == "char"){
-					addSimbolo($2.label, "int", temp);
-					// $$.traducao = "\t" + temp + " = 0" + ";\n"; 
-					
-					$$.label = gentempcode();
-					addSimbolo($$.label, "int", $$.label);
-					$$.traducao = $5.traducao + "\t" + $$.label + " = (int) " + $5.label + ";\n" + 
-					"\t" + temp + " = " + $$.label + ";\n";
-				}
-			}
-
-			| TK_VAR TK_ID TK_TIPO_FLOAT '=' E ';' 
-			{
-				string temp = gentempcode();
-				
-				bool encontrei = buscaVariavel($2.label); 
-				
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				if($5.tipo == "float"){ 
-
-					addSimbolo($2.label, "float", temp);
-			
-					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
-					$$.label = "float " + $2.label + " = " + $5.label;
-				}
-
-				else if ($5.tipo == "int"){
-					addSimbolo($2.label, "float", temp);
-					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
-					
-					$$.label = gentempcode();
-					addSimbolo($$.label, "float", $$.label);
-					$$.traducao = $5.traducao + "\t" + $$.label + " = (float) " + $5.label + ";\n" + 
-					"\t" + temp + " = " + $$.label + ";\n";
-				}
-			}
-
-			| TK_VAR TK_ID TK_TIPO_CHAR '=' E ';' 
-			{	
-				string temp = gentempcode();
-				
-				bool encontrei = buscaVariavel($2.label); 
-				
-				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
-				if($5.tipo == "char"){ 
-
-					addSimbolo($2.label, "char", temp);
-			
-					$$.traducao = $2.traducao + $5.traducao + "\t" + temp + " = " + $5.label + ";\n";
-					$$.label = "char " + $2.label + " = " + $5.label;
-				}
-
-				else if ($5.tipo == "int"){
-					addSimbolo($2.label, "char", temp);
-					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
-					
-					$$.label = gentempcode();
-					addSimbolo($$.label, "char", $$.label);
-					$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
-					"\t" + temp + " = " + $$.label + ";\n";
-				}
-
-				else if ($5.tipo == "float"){
-					addSimbolo($2.label, "char", temp);
-					$$.traducao = "\t" + temp + " = 0" + ";\n"; 
-					
-					$$.label = gentempcode();
-					addSimbolo($$.label, "char", $$.label);
-					$$.traducao = $5.traducao + "\t" + $$.label + " = (char) " + $5.label + ";\n" + 
-					"\t" + temp + " = " + $$.label + ";\n";
-				}
-			}
-			
-			| TK_VAR TK_ID TK_TIPO_STRING '=' E ';' 
-			{
-				if ($5.tipo == "string"){
-					bool encontrei = buscaVariavel($2.label); 
-					$$.label = gentempcode();
-
-					if(encontrei)
-						yyerror("erro: a variavel '" + $2.label + "' já foi declarada");	
-					
-					addStr($2.label, "string", $$.label, $5.conteudo);
-					
-					$$.traducao = $5.traducao + "\tstrcpy(" + $$.label + ", " + $5.label + ");\n"; 
-					// $$.label = "\tstrcpy(" + temp + ", " + $5.label + ");\n";
-				}
-				else yyerror("Atribuição inválida");
 			}
 			;
 
@@ -1185,6 +1223,8 @@ E
 			//OPERADORES DE ATRIBUIÇÃO
 			| TK_ID '=' CHAMA_FUNCAO 
 			{
+				cout << "Chamando Função\n";
+
 				// if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
 
 				// TIPO_SIMBOLO var = getSimbolo($1.label);
@@ -1203,9 +1243,25 @@ E
 
 				TIPO_SIMBOLO var = getSimbolo($1.label);
 				
+				// if($1.tipo == "bool"){ 
+				// 	if($3.tipo != "bool"){
+				// 		yyerror("Erro: valor (" + $3.conteudo + ") inválido para o tipo bool" );
+				// 	}
+					
+				// 	string temp = gentempcode();
+				// 	addSimbolo($2.label, "bool", temp);
+ 				// 	string val_bool;
+					 
+				// 	if ($3.label_bool == "True") val_bool = "1";
+				// 	else val_bool = "0";
+
+				// 	$$.traducao = "\t" + temp + " = " + val_bool + ";\n";
+				// 	$$.label = "int " + $2.label + " = " + $3.label;
+				// }
+
 				if(var.tipoVariavel == $3.tipo){
 					if (var.tipoVariavel == "string"){
-						cout << "$3.traducao no = " + $3.traducao << endl;
+						// cout << "$3.traducao no = " + $3.traducao << endl;
 						$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
 					}
 	
@@ -1305,6 +1361,7 @@ E
 			{
 				$$.tipo = "bool";
 				$$.conteudo = "1";
+				$$.label_bool = "True";
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
 				addSimbolo($$.label, $$.tipo, $$.label);
@@ -1314,6 +1371,7 @@ E
 			{
 				$$.tipo = "bool";
 				$$.conteudo = "0";
+				$$.label_bool = "False";
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
 				addSimbolo($$.label, $$.tipo, $$.label);
@@ -1463,6 +1521,18 @@ void addStr(string nome, string tipo, string temp, string conteudo){
 	print_var(var);		
 }
 
+void addVector(string nome, string tipo, string temp, string vetor){
+	TIPO_SIMBOLO var;
+	var.nomeVariavel = nome;
+	var.tipoVariavel = tipo;
+	var.tempVariavel = temp;
+	var.vetor = vetor;
+
+	int contexto = mapa.size() - 1;
+	mapa[contexto].push_back(var);		
+	print_var(var);		
+}
+
 void print_var(TIPO_SIMBOLO var){
 	if (var.tipoVariavel == "bool") var.tipoVariavel = "int";
 
@@ -1478,7 +1548,7 @@ void print_var(TIPO_SIMBOLO var){
 		}
 	}
 	else{
-		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + ";\n";
+		declaracoes += "\t" + var.tipoVariavel + " " + var.tempVariavel + var.vetor + ";\n";
 	}			
 
 }

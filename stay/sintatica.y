@@ -8,11 +8,13 @@
 #define YYSTYPE atributos
 
 using namespace std;
+using std::stoi;
 
 int var_lace_qnt;
 int var_cond_qnt;
 int var_linha_qnt = 1;
 int var_lace_name_qnt = 0;
+int num_elementos_iniciados; 
 
 string error = "";
 string warning = "";
@@ -34,6 +36,8 @@ struct atributos
 	string label_bool;
 	bool isVector;
 	string vetor;
+	int sizeVector;
+	int numElementos;
 };
 
 typedef struct
@@ -114,7 +118,6 @@ TIPO_LOOP getLaceBreak();
 void addFunc(string nome, string tipo);
 TIPO_FUNC getFunc(string func);
 bool buscaFunc(string func);
-
 
 int yylex(void);
 void yyerror(string);
@@ -515,6 +518,8 @@ COMANDOS	: COMANDO COMANDOS
 
 INICIALIZA_MULTI 	: INICIALIZA
 					{
+						num_elementos_iniciados++;
+						$$.numElementos++;
 						$$.label = $1.label;
 						$$.tipo = $1.tipo;
 						$$.conteudo = $1.conteudo;
@@ -523,12 +528,16 @@ INICIALIZA_MULTI 	: INICIALIZA
 
 					| INICIALIZA ',' INICIALIZA_MULTI
 					{
+						num_elementos_iniciados++;
+						int tam = $1.numElementos + $3.numElementos;
+						cout << "TAM EL " + std::to_string(tam) << endl; 
 						if ($1.tipo != $3.tipo) yyerror("erro: Um vetor não pode receber tipos diferentes" );
 
 						$$.tipo = $1.tipo;
 						
 						$$.conteudo = $1.conteudo + ", " + $3.conteudo;
 						$$.traducao = $1.traducao + $3.traducao;
+
 
 						// cout << "VERIFICAÇÂO " + $1.conteudo + ", " + $3.conteudo << endl;
 					}
@@ -625,6 +634,7 @@ TIPO 		: TK_TIPO_INT
 
 			| VETOR TIPO
 			{
+				$$.sizeVector = $1.sizeVector;
 				$$.tipo = $2.tipo;
 				$$.isVector = true;
 				$$.vetor = $1.traducao;
@@ -691,12 +701,16 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 				if(encontrei)
 					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
-				
+
 
 				if ($3.isVector){
 					if ($3.tipo != $5.tipo) yyerror("erro: Não é permirtido tipos diferentes na inicialização do vetor (" + $2.label + ")");
-				
+
+					cout << "Num_elementos_iniciados = " + std::to_string(num_elementos_iniciados) + " sizeVector = " + std::to_string($3.sizeVector) << endl;
+
+					if (num_elementos_iniciados > $3.sizeVector) yyerror("erro: excesso de elementos para o vetor (" + $2.label + ")");
 					addVector($2.label, $3.tipo, temp, $3.vetor, $5.conteudo);
+					num_elementos_iniciados = 0;
 				}
 				
 				else if ($3.tipo == $5.tipo && $3.tipo == "string"){
@@ -792,6 +806,8 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 VETOR 	: '[' TK_NUM ']'
 		{
+			$$.sizeVector = stoi($2.label);
+
 			$$.label = "[" + $2.label + "]";
 			$$.traducao = $$.label;
 		}
@@ -808,6 +824,7 @@ VETOR 	: '[' TK_NUM ']'
 		{
 			$$.label = "[]";
 			$$.traducao = $$.label;
+			$$.sizeVector = 500;
 		}
 		;
 
@@ -1670,6 +1687,7 @@ int main( int argc, char* argv[] )
 {	
 	var_temp_qnt = 0;
 	contextoGlobal = 0;
+	num_elementos_iniciados = 0;
 	vector<TIPO_SIMBOLO> tabelaSimbolos;
 	mapa.push_back(tabelaSimbolos);
 	

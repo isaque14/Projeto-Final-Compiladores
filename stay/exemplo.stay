@@ -1,9 +1,9 @@
 
 func main()
 {
-	var a bool;
-	a = True;
-	a = False;
+	var vet[] int = 1, 8 ,3 ,88;
+
+	var v[3] int = 0, 7;
 
 }
 

@@ -23,12 +23,11 @@ ID {LETRA}({LETRA}|{NUM})*
 {DELIM} 	{}
 
 "func main"	{ return TK_MAIN; }
-
 "func"      { return TK_FUNC; }
-
 "return"    { return TK_RETURN; }
-
 "var"       { return TK_VAR; }
+
+"pow"       { return TK_POW; }
 
 "int"		{ return TK_TIPO_INT; }
 "float"		{ return TK_TIPO_FLOAT; }

@@ -20,6 +20,7 @@ string error = "";
 string warning = "";
 string contLinha = "";
 string declaracoes = "";
+string funcoes = "";
 
 
 
@@ -132,6 +133,7 @@ void yyerror(string);
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
 %token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO TK_BREAK TK_CONTINUE
+%token TK_POW
 
 %start S
 
@@ -145,13 +147,15 @@ S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 				
 				// cout << $7.traducao;
 
+				cout << funcoes << endl;
+
 				cout << "\nint main(void)\n{\n" <<endl;
 				
 				cout << declaracoes;
 
-				cout << "\n" + $5.traducao << "\treturn 0;\n}" << endl;
+				cout << "\n" + $1.traducao + $5.traducao << "\treturn 0;\n}\n\n";
 
-				cout << $1.traducao << endl;
+				
 			}
 			;
 
@@ -250,13 +254,8 @@ PARAMETRO 	: TK_ID TK_TIPO_INT
 			;
 
 FUNCOES 	: DECLARA_FUNCAO FUNCOES
-			{
-				$$.traducao = $1.traducao + $2.traducao;
-			}
 			
-			| DECLARA_FUNCAO{
-				$$.traducao = $1.traducao;
-			}
+			| DECLARA_FUNCAO
 			;
 
 DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
@@ -266,13 +265,13 @@ DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
 
 					if ($7.temRetorno && $2.tipo == "void") yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") não deve ter retorno\n");
 
-					if ($2.tipo != $7.tipo) yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo);
+					if ($2.tipo != $7.tipo && $2.tipo != "void") yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo);
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 
 					addFunc($3.label, $2.tipo);
 					
-					$$.traducao = $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+					funcoes += $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}\n\n";
 				}
 				;
 
@@ -309,10 +308,6 @@ COMANDOS	: COMANDO COMANDOS
 			}
 
 			| FUNCOES{
-				$$.traducao = $1.traducao;
-			}
-
-			| DECLARA_FUNCAO{
 				$$.traducao = $1.traducao;
 			}
 

@@ -1,5 +1,12 @@
-func void teste(a int, b bool, c char, f float, s string){
-	return 1.2;
+var a int = 7
+var global float = 8.999
+
+func float teste(a int, b bool, c char, f float, s string){
+	return 9.3
+}
+
+func int nm(a int, b bool, c char, f float, s string){
+	return 1;
 }
 
 func main()

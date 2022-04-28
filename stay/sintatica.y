@@ -523,7 +523,7 @@ INICIALIZA_MULTI 	: INICIALIZA
 
 					| INICIALIZA ',' INICIALIZA_MULTI
 					{
-						if ($1.tipo != $3.tipo) yyerror("erro: O valor (" + $2.label + ") é diferente do tipo do vetor" );
+						if ($1.tipo != $3.tipo) yyerror("erro: Um vetor não pode receber tipos diferentes" );
 
 						$$.tipo = $1.tipo;
 						
@@ -634,7 +634,6 @@ TIPO 		: TK_TIPO_INT
 
 DECLARA_VAR : TK_VAR TK_ID TIPO 
 			{
-				cout << "teste vet " + $3.traducao;
 				bool encontrei = buscaVariavel($2.label);
 				string temp = gentempcode();
 				$$.tipo = $3.tipo;
@@ -685,6 +684,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 			| TK_VAR TK_ID TIPO '=' INICIALIZA_MULTI 
 			{
+				cout << "VAR " + $2.label << endl;
 				$$.tipo = $3.tipo;
 				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
@@ -1335,7 +1335,7 @@ E
 						
 			| TK_ID '=' E
 			{
-				if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
+				// if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
 
 				TIPO_SIMBOLO var = getSimbolo($1.label);
 				
@@ -1415,81 +1415,12 @@ E
 				}
 			}
 
-			| TK_ID '=' TK_TRUE
+			| INICIALIZA
 			{
-			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
-
-				TIPO_SIMBOLO var1 = getSimbolo($1.label);
-				$$.label = var1.tempVariavel;
-				$$.traducao = $1.traducao + $3.traducao + "\t" + 
-				var1.tempVariavel + " = 1"  + ";\n";
-			}
-
-			| TK_ID '=' TK_FALSE
-			{
-			    if (!buscaVariavel($1.label)) yyerror("Erro: Variável (" + $1.label + ") não Declarada");
-
-				TIPO_SIMBOLO var1 = getSimbolo($1.label);
-				$$.label = var1.tempVariavel;
-				$$.traducao = $1.traducao + $2.traducao + "\t" + 
-				var1.tempVariavel + " = 0"  + ";\n";
-			}
-
-			| TK_NUM
-			{
-				$$.tipo = "int";
-				$$.conteudo = $1.label;
-				$$.label = gentempcode();
-				addSimbolo($$.label, $$.tipo, $$.label);
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-			}
-
-			| TK_REAL
-			{
-				$$.tipo = "float";
-				$$.conteudo = $1.label;
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				addSimbolo($$.label, $$.tipo, $$.label);
-			}
-
-			| TK_TRUE
-			{
-				$$.tipo = "bool";
-				$$.conteudo = "1";
-				$$.label_bool = "True";
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
-				addSimbolo($$.label, $$.tipo, $$.label);
-			}
-
-			| TK_FALSE
-			{
-				$$.tipo = "bool";
-				$$.conteudo = "0";
-				$$.label_bool = "False";
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $$.conteudo + ";\n";
-				addSimbolo($$.label, $$.tipo, $$.label);
-			}
-
-			| TK_CHAR
-			{
-				$$.tipo = "char";
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				addSimbolo($$.label, $$.tipo, $$.label);
-			}
-
-			| TK_STRING
-			{
-				$$.tipo = "string";
-				$$.conteudo = $$.label;
-				$$.label = gentempcode();
-				addStr($$.label, $$.tipo, $$.label, $$.conteudo);
-				// $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				$$.traducao = "\tstrcpy(" + $$.label + ", " + $1.label + ");\t//"+ $$.label +"\n";	
-				// cout << "traducao 1 " + $$.traducao << endl;			
+				$$.tipo = $1.tipo;
+				$$.conteudo = $1.conteudo;
+				$$.label = $1.label;
+				$$.traducao = $1.traducao;
 			}
 	
 			| TK_ID

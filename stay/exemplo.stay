@@ -1,6 +1,9 @@
+func void teste(a int, b bool, c char, f float, s string){
+	return 1.2;
+}
 
 func main()
 {
-
+	
 }
 

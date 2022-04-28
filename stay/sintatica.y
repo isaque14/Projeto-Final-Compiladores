@@ -162,18 +162,21 @@ BLOCO		: '{' COMANDOS '}'
 
 			| '{' COMANDOS RETORNO '}'
 			{
+				$$.tipo = $3.tipo;
 				$$.temRetorno = true;
 				$$.traducao = $2.traducao + $3.traducao;
 			}
 
 			| '{' RETORNO COMANDOS '}'
 			{
+				$$.tipo = $2.tipo;
 				$$.temRetorno = true;
 				$$.traducao = $2.traducao + $3.traducao;
 			}
 
 			| '{' COMANDOS RETORNO COMANDOS '}'
 			{
+				$$.tipo = $3.tipo;
 				$$.temRetorno = true;
 				$$.traducao = $1.traducao + $2.traducao + $3.traducao;
 			}
@@ -197,29 +200,9 @@ ATRIBUTOS 	: ATRIBUTO
 			;
 
 
-ATRIBUTO 	: TK_ID TK_TIPO_INT
+ATRIBUTO 	: TK_ID TIPO 
 			{
-				$$.traducao = $1.label + " int";
-			}
-
-			| TK_ID TK_TIPO_FLOAT
-			{
-				$$.traducao = $1.label + " float";
-			}
-
-			| TK_ID TK_TIPO_BOOL
-			{
-				$$.traducao = $1.label + " bool";
-			}
-
-			| TK_ID TK_TIPO_CHAR
-			{
-				$$.traducao = $1.label + " char";
-			}
-
-			| TK_ID TK_TIPO_STRING
-			{
-				$$.traducao = $1.label + " string";
+				$$.traducao = $1.label + " " + $2.tipo;
 			}
 			;
 
@@ -276,73 +259,21 @@ FUNCOES 	: DECLARA_FUNCAO FUNCOES
 			}
 			;
 
-DECLARA_FUNCAO 	: TK_FUNC TK_TIPO_INT TK_ID '(' ATRIBUTOS ')' BLOCO
+DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
+					if (!$7.temRetorno && $2.tipo != "void") yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
+
+					if ($7.temRetorno && $2.tipo == "void") yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") não deve ter retorno\n");
+
+					if ($2.tipo != $7.tipo) yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo);
 
 					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
 
-					addFunc($3.label, "int");
+					addFunc($3.label, $2.tipo);
 					
-					$$.traducao = "int " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
+					$$.traducao = $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
 				}
-
-				| TK_FUNC TK_TIPO_FLOAT TK_ID '(' ATRIBUTOS ')' BLOCO
-				{
-					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
-
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
-					addFunc($3.label, "float");
-
-					$$.traducao = "float " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
-				}
-
-				| TK_FUNC TK_TIPO_BOOL TK_ID '(' ATRIBUTOS ')' BLOCO
-				{
-					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
-
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
-					addFunc($3.label, "bool");
-
-					$$.traducao = "bool " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
-				}	
-
-				| TK_FUNC TK_TIPO_CHAR TK_ID '(' ATRIBUTOS ')' BLOCO
-				{
-					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
-
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
-					addFunc($3.label, "char");
-
-					$$.traducao = "char " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
-				}
-
-				| TK_FUNC TK_TIPO_STRING TK_ID '(' ATRIBUTOS ')' BLOCO
-				{
-					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno) yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
-
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
-					addFunc($3.label, "string");
-
-					$$.traducao = "string " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
-				}
-
-				| TK_FUNC TK_TIPO_VOID TK_ID '(' ATRIBUTOS ')' BLOCO
-				{
-					bool encontrei = buscaFunc($3.label);
-					if ($7.temRetorno) yyerror("erro: A função do tipo void (" + $3.label + ") não deve possuir retorno.\n");
-
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
-					addFunc($3.label, "void");
-
-					$$.traducao = "void " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}";
-				}
-
 				;
 
 CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')' ';'
@@ -357,24 +288,31 @@ CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')' ';'
 
 RETORNO 	: TK_RETURN E ';'
 			{
+				$$.tipo = $2.tipo;
 				$$.temRetorno = true;
 				$$.label = "return";
 				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
 			}
 
-			TK_RETURN E 
+			| TK_RETURN E 
 			{
+				$$.tipo = $2.tipo;
 				$$.temRetorno = true;
 				$$.label = "return";
 				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
 			}
+			;
 
 COMANDOS	: COMANDO COMANDOS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
 			}
-			
+
 			| FUNCOES{
+				$$.traducao = $1.traducao;
+			}
+
+			| DECLARA_FUNCAO{
 				$$.traducao = $1.traducao;
 			}
 
@@ -630,6 +568,12 @@ TIPO 		: TK_TIPO_INT
 			{
 				$$.tipo = "string";
 				$$.traducao = "string";
+			}
+
+			| TK_TIPO_VOID
+			{
+				$$.tipo = "void";
+				$$.traducao = "void";
 			}
 
 			| VETOR TIPO

@@ -362,6 +362,13 @@ RETORNO 	: TK_RETURN E ';'
 				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
 			}
 
+			TK_RETURN E 
+			{
+				$$.temRetorno = true;
+				$$.label = "return";
+				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
+			}
+
 COMANDOS	: COMANDO COMANDOS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
@@ -508,13 +515,6 @@ COMANDOS	: COMANDO COMANDOS
 				"FIM_FOR_" + jump + ":\n" + loop.fimLaco + ":\n" + $8.traducao;
 			}
 			;
-
-/* BREAK 		: TK_BREAK
-			{
-				TIPO_LOOP loop = getLaceBreak();
-				$$.traducao = "\tgoto " + loop.fimLaco + "\n";
-			} */
-
 
 INICIALIZA_MULTI 	: INICIALIZA
 					{
@@ -828,7 +828,22 @@ VETOR 	: '[' TK_NUM ']'
 		}
 		;
 
+CONTROLE_LACO	: TK_BREAK 
+				{
+					TIPO_LOOP loop = getLaceBreak();
+					$$.traducao = "\tgoto " + loop.fimLaco + ";\n";
+				}
+
+				| TK_CONTINUE 
+				{
+					TIPO_LOOP loop = getLaceBreak();
+					$$.traducao = "\tgoto " + loop.nomeLaco + ";\n";
+				}
+				;
+
 COMANDO 	: E ';'
+
+			| E
 
 			| DECLARA_VAR 
 			{
@@ -840,20 +855,16 @@ COMANDO 	: E ';'
 				$$.traducao = $1.traducao;
 			}
 
-			| TK_BREAK ';'
+			| CONTROLE_LACO
 			{
-				TIPO_LOOP loop = getLaceBreak();
-				$$.traducao = "\tgoto " + loop.fimLaco + ";\n";
+				$$.traducao = $1.traducao;
 			}
 
-			| TK_CONTINUE ';'
+			| CONTROLE_LACO ';'
 			{
-				TIPO_LOOP loop = getLaceBreak();
-				$$.traducao = "\tgoto " + loop.nomeLaco + ";\n";
+				$$.traducao = $1.traducao;
 			}
 			;
-
-
 			
 E 			
 			// OPERADORES ARITMÉTICOS

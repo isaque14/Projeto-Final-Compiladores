@@ -803,7 +803,70 @@ COMANDO 	: E ';'
 			{
 				$$.traducao = $1.traducao;
 			}
+
+			| POW
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| POW ';'
+			{
+				$$.traducao = $1.traducao;
+			}
 			;
+
+POW		: TK_POW '(' INICIALIZA ',' INICIALIZA ')'
+		{
+			if (($3.tipo == "int" && $5.tipo == "int") || ($3.tipo == "int" && $5.tipo == "float") 
+				|| ($3.tipo == "float" && $5.tipo == "float") || ($3.tipo == "float" && $5.tipo == "int")) 
+			{
+				int base = stoi($3.conteudo);
+				int exp = stoi($5.conteudo);
+			
+				$$.traducao = $3.traducao + $5.traducao;
+				
+				string temp = gentempcode();				
+				string temp2 = gentempcode();
+				string result = gentempcode();
+				string zero = gentempcode();
+				addSimbolo(temp, "bool", temp);
+				addSimbolo(temp2, "bool", temp2);
+				addSimbolo(result, "float", result);
+				addSimbolo(zero, "int", zero);
+				string lace = genLacecode();
+				string jump = label_jump();
+				string inicio_loop = "INICIO_POW_" + jump;
+				string fim_loop = "FIM_POW_" + jump;
+				string cond_inicial = $5.label + " != " + zero + ";\n";
+				// TIPO_LOOP loop = getLace($1.label);	
+
+				string condicao = temp + " = !" + temp2;
+
+				$$.traducao = $3.traducao + $5.traducao + "\t" + zero + " = 0; //zero\n" + "\t" + 
+				result + " = 1.0; //resultado\n" + inicio_loop + ":\n" +
+				lace + ":\n" + "\t" + temp2 + " = " + cond_inicial + "\t" + condicao + ";\n" +
+				"\n\tif (" + temp + ") goto " + fim_loop + ";\n" +
+			 	"\t" + result + " = " + result + " * " + $3.label + ";\n" +
+				"\t" + $5.label + " = " + $5.label + " -1;\n" +
+				"\tgoto " + lace + ";\n" +
+				fim_loop + ":\n\n";
+
+				$$.label = result;
+			}
+			else yyerror("erro: Parâmetro inválido para potência (pow)");
+		}
+
+		| TK_POW '(' ')'
+		{
+			yyerror("erro: O comando (pow) precisa de dois parâmetros");
+		}
+
+		| TK_POW '(' INICIALIZA ')'
+		{
+			yyerror("erro: O comando (pow) precisa de dois parâmetros");
+		}
+		;
+
 			
 E 			
 			// OPERADORES ARITMÉTICOS
@@ -1298,6 +1361,15 @@ E
 				// 		$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
 				// 	}
 				// }
+			}
+
+			| TK_ID '=' POW
+			{
+				TIPO_SIMBOLO var = getSimbolo($1.label);
+				
+				if (var.tipoVariavel != "float") yyerror("erro: A variável (" + var.tipoVariavel + " " + var.nomeVariavel + ") não pode receber o retorno float da função pow()");
+
+				$$.traducao = $1.traducao + $3.traducao + "\t" + var.tempVariavel + " = " + $3.label + ";\n";
 			}
 						
 			| TK_ID '=' E

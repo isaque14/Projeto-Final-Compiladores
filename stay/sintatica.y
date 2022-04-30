@@ -12,13 +12,13 @@ using std::stoi;
 
 int var_lace_qnt;
 int var_cond_qnt;
-int var_linha_qnt = 1;
+int num_linha = 1;
 int var_lace_name_qnt = 0;
 int num_elementos_iniciados; 
 
 string error = "";
 string warning = "";
-string contLinha = "";
+string linha_atual = "";
 string declaracoes = "";
 string funcoes = "";
 
@@ -109,7 +109,7 @@ int getLength(string str);
 
 
 void atualizarContexto(int num);
-void contadorDeLinha();
+void contLinha();
 void pushContexto();
 void popContexto();
 void pushLoop(string tipo);
@@ -133,7 +133,7 @@ void yyerror(string);
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
 %token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO TK_BREAK TK_CONTINUE
-%token TK_POW
+%token TK_POW TK_SQRT
 
 %start S
 
@@ -143,19 +143,18 @@ void yyerror(string);
 
 S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 			{
-				cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
-				
-				// cout << $7.traducao;
+				if (error == ""){
+					cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
 
-				cout << funcoes << endl;
+					cout << funcoes << endl;
 
-				cout << "\nint main(void)\n{\n" <<endl;
-				
-				cout << declaracoes;
+					cout << "\nint main(void)\n{\n" <<endl;
+					
+					cout << declaracoes;
 
-				cout << "\n" + $1.traducao + $5.traducao << "\treturn 0;\n}\n\n";
-
-				
+					cout << "\n" + $1.traducao + $5.traducao << "\treturn 0;\n}\n\n";
+				}
+				else yyerror(error);
 			}
 			;
 
@@ -261,14 +260,16 @@ FUNCOES 	: DECLARA_FUNCAO FUNCOES
 DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					bool encontrei = buscaFunc($3.label);
-					if (!$7.temRetorno && $2.tipo != "void") yyerror("erro: Retorno da função (" + $3.label + ") não expecificado\n");
+					if(encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Função (" + $3.label + ") Já declarada" + "\n";
 
-					if ($7.temRetorno && $2.tipo == "void") yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") não deve ter retorno\n");
 
-					if ($2.tipo != $7.tipo && $2.tipo != "void") yyerror("erro: A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo);
+					if (!$7.temRetorno && ($2.tipo != "void")) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Retorno da função (" + $3.label + ") não expecificado.\n";
 
-					if(encontrei) yyerror("Função " + $3.label + " Já declarada");
+					else if ($7.temRetorno && $2.tipo == "void") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A função (" + $2.tipo + " " + $3.label + ") não deve ter retorno\n";
 
+					else if ($2.tipo != $7.tipo && $2.tipo != "void") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo + "\n";
+
+					
 					addFunc($3.label, $2.tipo);
 					
 					funcoes += $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}\n\n";
@@ -300,6 +301,18 @@ RETORNO 	: TK_RETURN E ';'
 				$$.label = "return";
 				$$.traducao = $2.traducao + "\treturn " + $2.label + ";\n";
 			}
+
+			| TK_RETURN
+			{
+				$$.temRetorno = false;
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Falta uma expressão após o comando (return)\n";
+			}
+
+			| TK_RETURN ';'
+			{
+				$$.temRetorno = false;
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Falta uma expressão após o comando (return)\n";
+			}
 			;
 
 COMANDOS	: COMANDO COMANDOS
@@ -324,25 +337,27 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO COMANDOS
 			{				
-				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+				if($2.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 
-				string temp = gentempcode();
-				$$.label = temp;
-				addSimbolo(temp, "bool", temp);
-				string jump = label_jump();
-				
-				addSimbolo(temp, "bool", temp);
-				string condicao = temp + " = !" + $2.label;
+				else{
+					string temp = gentempcode();
+					$$.label = temp;
+					addSimbolo(temp, "bool", temp);
+					string jump = label_jump();
+					
+					addSimbolo(temp, "bool", temp);
+					string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";\n" +
-			 	$3.traducao +
-				"\tFIM_IF_" + jump + ":\n\n" +
-				$4.traducao;
+					$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+					"\n\tif (" + temp + ") goto FIM_IF_" + jump + ";\n" +
+					$3.traducao +
+					"\tFIM_IF_" + jump + ":\n\n" +
+					$4.traducao;
+				}
 			}
 			| TK_IF E BLOCO TK_ELSE BLOCO COMANDOS
 			{
-				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+				if($2.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 				string temp = gentempcode();
 
 				string jump1 = label_jump();
@@ -364,88 +379,97 @@ COMANDOS	: COMANDO COMANDOS
 
 			| TK_IF E BLOCO TK_ELSE_IF E BLOCO COMANDOS
 			{
-				if($2.tipo != "bool" || $5.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
-				string temp = gentempcode();
-				string jump1 = label_jump();
-				string jump2 = label_jump();
+				if($2.tipo != "bool" || $5.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 				
-				addSimbolo(temp, "bool", temp);
-				string condicao = temp + " = !" + $2.label;
+				else{
+					string temp = gentempcode();
+					string jump1 = label_jump();
+					string jump2 = label_jump();
+					
+					addSimbolo(temp, "bool", temp);
+					string condicao = temp + " = !" + $2.label;
 
-				string temp2 = gentempcode();
-				addSimbolo(temp2, "bool", temp2);
-				string condicao2 = temp2 + " = !" + $5.label;
+					string temp2 = gentempcode();
+					addSimbolo(temp2, "bool", temp2);
+					string condicao2 = temp2 + " = !" + $5.label;
 
-				$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + "\n;" +
-			 	$3.traducao +
-				"\nFIM_IF_" + jump1 + ":\n" +
-				"INICIO_ELSE_IF_" + jump2 + ":\n" +
-				$5.traducao + "\t" + condicao2 + ";\n" +
-				"\n\tif (" + temp2 + ") goto FIM_ELSE_IF_" + jump2 + ";"
-				"\n\t{\n" +
-			 	$6.traducao +
-				"\t}\n" +
-				"FIM_ELSE_IF_" + jump2 + ":\n\n" + $7.traducao;
+					$$.traducao = $2.traducao + "\t" + condicao + ";\n" +
+					"\n\tif (" + temp + ") goto FIM_IF_" + jump1 + "\n;" +
+					$3.traducao +
+					"\nFIM_IF_" + jump1 + ":\n" +
+					"INICIO_ELSE_IF_" + jump2 + ":\n" +
+					$5.traducao + "\t" + condicao2 + ";\n" +
+					"\n\tif (" + temp2 + ") goto FIM_ELSE_IF_" + jump2 + ";"
+					"\n\t{\n" +
+					$6.traducao +
+					"\t}\n" +
+					"FIM_ELSE_IF_" + jump2 + ":\n\n" + $7.traducao;
+				}
 			}
 
 			| TK_WHILE E BLOCO COMANDOS 
 			{
-				if($2.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+				if($2.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 
-				string temp = gentempcode();
-				$$.label = temp;
-				addSimbolo(temp, "bool", temp);
-				string lace = genLacecode();
-				TIPO_LOOP loop = getLace($1.label);	
-				
-				string condicao = temp + " = !" + $2.label;
+				else{
+					string temp = gentempcode();
+					$$.label = temp;
+					addSimbolo(temp, "bool", temp);
+					string lace = genLacecode();
+					TIPO_LOOP loop = getLace($1.label);	
+					
+					string condicao = temp + " = !" + $2.label;
 
-				$$.traducao = loop.nomeLaco + ":\n" + lace + ":\n" + $2.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-			 	$3.traducao +
-				"\tgoto " + lace + ";\n" +
-				loop.fimLaco + ":\n\n" + $4.traducao;
+					$$.traducao = loop.nomeLaco + ":\n" + lace + ":\n" + $2.traducao + "\t" + condicao + ";\n" +
+					"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+					$3.traducao +
+					"\tgoto " + lace + ";\n" +
+					loop.fimLaco + ":\n\n" + $4.traducao;
+				}
 			}
 
 			| TK_DO BLOCO TK_WHILE E ';' COMANDOS
 			{
-				if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
-
-				string temp = gentempcode();
-				$$.label = temp;
-				addSimbolo(temp, "bool", temp);
-				string lace = genLacecode();
-				TIPO_LOOP loop = getLace($1.label);	
+				if($4.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 				
-				string condicao = temp + " = !" + $4.label;
+				else{
+					string temp = gentempcode();
+					$$.label = temp;
+					addSimbolo(temp, "bool", temp);
+					string lace = genLacecode();
+					TIPO_LOOP loop = getLace($1.label);	
+					
+					string condicao = temp + " = !" + $4.label;
 
-				$$.traducao = lace + ":\n" +  
-				$4.traducao + $2.traducao + "\t" + condicao + ";\n" +
-				$3.traducao + loop.nomeLaco + ":\n" +
-				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-				"\tgoto " + lace + ";\n" +
-				loop.fimLaco + ":\n\n" + $6.traducao;
+					$$.traducao = lace + ":\n" +  
+					$4.traducao + $2.traducao + "\t" + condicao + ";\n" +
+					$3.traducao + loop.nomeLaco + ":\n" +
+					"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+					"\tgoto " + lace + ";\n" +
+					loop.fimLaco + ":\n\n" + $6.traducao;
+				}
 			}			
 
 			| TK_FOR E ';' E ';' E BLOCO COMANDOS
 			{
-				if($4.tipo != "bool") yyerror("erro: o condicinal do loop deve ser um boolean");
+				if($4.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 
-				string temp = gentempcode();
-				string jump = label_jump();
-				
-				addSimbolo(temp, "bool", temp);
-				string lace = genLacecode();
-				TIPO_LOOP loop = getLace($1.label);
-				string condicao = temp + " =! " + $4.label;
+				else{	
+					string temp = gentempcode();
+					string jump = label_jump();
+					
+					addSimbolo(temp, "bool", temp);
+					string lace = genLacecode();
+					TIPO_LOOP loop = getLace($1.label);
+					string condicao = temp + " =! " + $4.label;
 
-				$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
-				$4.traducao + "\t" + condicao + ";\n" +
-				"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
-			 	$7.traducao + loop.nomeLaco + ":\n" + $6.traducao +
-				"\tgoto " + lace + ";\n" +
-				"FIM_FOR_" + jump + ":\n" + loop.fimLaco + ":\n" + $8.traducao;
+					$$.traducao = $2.traducao + "INICIO_FOR_" + jump + ":\n" + lace + ":\n" +
+					$4.traducao + "\t" + condicao + ";\n" +
+					"\n\tif (" + temp + ") goto " + loop.fimLaco + ";\n" +
+					$7.traducao + loop.nomeLaco + ":\n" + $6.traducao +
+					"\tgoto " + lace + ";\n" +
+					"FIM_FOR_" + jump + ":\n" + loop.fimLaco + ":\n" + $8.traducao;
+				}
 			}
 			;
 
@@ -464,15 +488,14 @@ INICIALIZA_MULTI 	: INICIALIZA
 						num_elementos_iniciados++;
 						int tam = $1.numElementos + $3.numElementos;
 						cout << "TAM EL " + std::to_string(tam) << endl; 
-						if ($1.tipo != $3.tipo) yyerror("erro: Um vetor não pode receber tipos diferentes" );
+						if ($1.tipo != $3.tipo) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Um vetor não pode receber tipos diferentes\n";
 
-						$$.tipo = $1.tipo;
-						
-						$$.conteudo = $1.conteudo + ", " + $3.conteudo;
-						$$.traducao = $1.traducao + $3.traducao;
-
-
-						// cout << "VERIFICAÇÂO " + $1.conteudo + ", " + $3.conteudo << endl;
+						else{
+							$$.tipo = $1.tipo;
+							
+							$$.conteudo = $1.conteudo + ", " + $3.conteudo;
+							$$.traducao = $1.traducao + $3.traducao;
+						}
 					}
 
 INICIALIZA 	: TK_NUM
@@ -588,7 +611,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				$$.tipo = $3.tipo;
 			
 				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
 				
 				if ($3.isVector){
 					addVector($2.label, $$.tipo, temp, $3.vetor, "0");
@@ -639,15 +662,15 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				string temp = gentempcode();
 
 				if(encontrei)
-					yyerror("erro: a variavel '" + $2.label + "' já foi declarada");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
 
 
 				if ($3.isVector){
-					if ($3.tipo != $5.tipo) yyerror("erro: Não é permirtido tipos diferentes na inicialização do vetor (" + $2.label + ")");
+					if ($3.tipo != $5.tipo) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Não é permirtido tipos diferentes na inicialização do vetor (" + $2.label + ")\n";
 
 					cout << "Num_elementos_iniciados = " + std::to_string(num_elementos_iniciados) + " sizeVector = " + std::to_string($3.sizeVector) << endl;
 
-					if (num_elementos_iniciados > $3.sizeVector) yyerror("erro: excesso de elementos para o vetor (" + $2.label + ")");
+					if (num_elementos_iniciados > $3.sizeVector) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Excesso de elementos para o vetor (" + $2.label + ")\n";
 					addVector($2.label, $3.tipo, temp, $3.vetor, $5.conteudo);
 					num_elementos_iniciados = 0;
 				}
@@ -667,7 +690,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 				else if($3.tipo == "bool"){ 
 					if($5.tipo != "bool"){
-						yyerror("Erro: valor (" + $5.conteudo + ") inválido para o tipo bool" );
+						error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m valor (" + $5.conteudo + ") inválido para o tipo bool\n";
 					}
 						
 					addSimbolo($2.label, "bool", temp);
@@ -738,7 +761,7 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 					}
 				}
 
-				else yyerror("Atribuição inválida para a variável (" + $2.label + ")");
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Atribuição inválida para a variável (" + $2.label + ")\n";
 			}
 			;
 
@@ -754,7 +777,7 @@ VETOR 	: '[' TK_NUM ']'
 		| '['  TK_ID ']'
 		{
 			TIPO_SIMBOLO var = getSimbolo($2.label);
-			if (var.tipoVariavel != "int") yyerror("erro: Tamanho do vetor (" + var.nomeVariavel + ") deve ser um inteiro");
+			if (var.tipoVariavel != "int") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Tamanho do vetor (" + var.nomeVariavel + ") deve ser um inteiro\n";
 			$$.label = "[" + var.tempVariavel + "]";
 			$$.traducao = "[" + var.tempVariavel + "]";
 		}
@@ -813,6 +836,16 @@ COMANDO 	: E ';'
 			{
 				$$.traducao = $1.traducao;
 			}
+
+			| SQRT
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| SQRT ';'
+			{
+				$$.traducao = $1.traducao;
+			} 
 			;
 
 POW		: TK_POW '(' INICIALIZA ',' INICIALIZA ')'
@@ -838,7 +871,6 @@ POW		: TK_POW '(' INICIALIZA ',' INICIALIZA ')'
 				string inicio_loop = "INICIO_POW_" + jump;
 				string fim_loop = "FIM_POW_" + jump;
 				string cond_inicial = $5.label + " != " + zero + ";\n";
-				// TIPO_LOOP loop = getLace($1.label);	
 
 				string condicao = temp + " = !" + temp2;
 
@@ -853,21 +885,112 @@ POW		: TK_POW '(' INICIALIZA ',' INICIALIZA ')'
 
 				$$.label = result;
 			}
-			else yyerror("erro: Parâmetro inválido para potência (pow)");
+			else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Parâmetro inválido para potência (pow)\n";
 		}
 
 		| TK_POW '(' ')'
 		{
-			yyerror("erro: O comando (pow) precisa de dois parâmetros");
+			error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O comando (pow) precisa de dois parâmetros\n";
 		}
 
 		| TK_POW '(' INICIALIZA ')'
 		{
-			yyerror("erro: O comando (pow) precisa de dois parâmetros");
+			error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O comando (pow) precisa de dois parâmetros\n"; 
 		}
 		;
 
-			
+SQRT 	: TK_SQRT '(' INICIALIZA ')'
+		{
+			if ($3.tipo == "int" || $3.tipo == "float"){
+
+				//precisão
+				string temp1 = gentempcode(); 
+				addSimbolo(temp1, "float", temp1);
+				string precisao = "\t" + temp1 + " = 0.000001; // precisao\n";
+
+				// Número 1
+				string temp2 = gentempcode(); 
+				addSimbolo(temp2, "float", temp2);
+				string num_1 = "\t" + temp2 + " = 1; //num_1\n";
+
+				// Número 2
+				string temp9 = gentempcode(); 
+				addSimbolo(temp9, "float", temp9);
+				string num_2 = "\t" + temp9 + " = 2; //num_2 raiz quadrada\n";
+
+				//Input
+				string temp3 = gentempcode(); 
+				addSimbolo(temp3, "float", temp3);
+				string input = temp3 + " = " + $3.label + "; //input\n";
+
+				// Aux Input 
+				string temp7 = gentempcode(); 
+				addSimbolo(temp7, "float", temp7);
+				string aux_input = "\t" + temp7 + " = " + $3.label + "; // aux_input\n";
+
+				// Cond_1 Aux_input - num_1
+				string temp4 = gentempcode(); 
+				addSimbolo(temp4, "int", temp4);
+				string cond1 = "\t" + temp4 + " = " + temp7 + " - " + temp2 + "; //Aux_input - num_1\n";
+
+				// Condição Final
+				string temp5 = gentempcode(); 
+				addSimbolo(temp5, "bool", temp5);
+				string cond_final = "\t" + temp5 + " = " + temp4 + " >= " + temp1 + "; // condição final\n";
+				
+				// Nega condição Final
+				string temp6 = gentempcode(); 
+				addSimbolo(temp6, "bool", temp6);
+				string condicao = "\t" + temp6 + " = !" + temp5 + "; //Nega cond_final\n";
+
+				// Resultado
+				string temp8 = gentempcode(); 
+				addSimbolo(temp8, "float", temp8);
+				string result = "\t" + temp8 + " = 0; // resultado\n";
+
+				// num_1 + aux_input
+				string temp10 = gentempcode(); 
+				addSimbolo(temp10, "float", temp10);
+				string operacao_1 = "\t" + temp10 + " = " + temp2 + " + " + temp7 + "; // num_1 + aux_input\n";
+
+				// (num_1 + aux_input) / num_2
+				string temp11 = gentempcode(); 
+				addSimbolo(temp11, "float", temp11);
+				string operacao_2 = "\t" + temp11 + " = " + temp10 + " / " + temp9 + "; // (num_1 + aux_input) / num_2\n";
+
+				// Input / aux_input
+				string temp12 = gentempcode(); 
+				addSimbolo(temp12, "float", temp12);
+				string operacao_3 = "\t" + temp12 + " = " + $3.label + " / " + temp7 + "; // Input / aux_input\n";
+
+				// Jumpers
+				string lace = genLacecode();
+				string jump = label_jump();
+				string inicio_loop = "INICIO_SQRT_" + jump;
+				string fim_loop = "FIM_SQRT_" + jump;
+
+				$$.traducao = $3.traducao + precisao + aux_input + num_1 + num_2 + result + 
+				inicio_loop + ":\n" +
+				lace + ":\n" + cond1 + cond_final + condicao +
+				"\n\tif (" + temp6 + ") goto " + fim_loop + ";\n" +
+			 	operacao_1 + operacao_2 + "\t" + temp7 + " = " + temp11 + ";\n" +
+				operacao_3 + "\t" + temp2 + " = " + temp12 + ";\n" + "\t" + temp8 + " = " + temp7 + ";\n" +
+				"\tgoto " + lace + ";\n" +
+				fim_loop + ":\n\n";
+
+				$$.label = temp8;
+			}
+			// error += "\033[1;31mError\033[0m - \033[1;36mLinha " + contLinha +  ":\033[0m\033[1;39m Operandos com tipos inválidos.\n";
+			else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Parâmetro inválido para ráiz quadrada (sqrt)";
+		}
+
+		| TK_SQRT '(' ')'
+		{
+			error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O comando (sqrt) precisa de um parâmetro real.\n"; 
+		}
+		;
+
+
 E 			
 			// OPERADORES ARITMÉTICOS
 			: E '+' E
@@ -920,7 +1043,7 @@ E
 					$$.label + " = " + $1.label + " + " + labelAux + ";\n";
 				}
 				
-				else yyerror("erro: Cast inválido");
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Cast inválido\n";
 				
 			}
 
@@ -965,7 +1088,7 @@ E
 					$$.label + " = " + $1.label + " - " + labelAux + ";\n";
 				}
 				
-				else yyerror("erro: Cast inválido");
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Cast inválido\n";
 			}
 
 			| E '*' E
@@ -1009,7 +1132,7 @@ E
 					$$.label + " = " + $1.label + " * " + labelAux + ";\n";
 				}
 				
-				else yyerror("erro: Cast inválido");
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Cast inválido\n";
 			}
 
 			| E '/' E
@@ -1036,44 +1159,46 @@ E
 				}
 
 				if(cont == aux.size() || (cont + ponto) == aux.size()){
-					yyerror("Operação inválida, Divisão por 0");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Operação inválida, Divisão por 0\n";
 				}
 
-				if($1.tipo == $3.tipo){
-					tipoAux = $1.tipo;
-										
-					$$.traducao = $1.traducao + $3.traducao + "\t" + 
-					$$.label + " = " + $1.label + " / " + $3.label + ";\n";
-					addSimbolo($$.label, tipoAux, $$.label);
-				}
-				else if($1.tipo == "int" & $3.tipo == "float"){
-					tipoAux = "float";
-					addSimbolo($$.label, tipoAux, $$.label);
-					converter = cast($1.tipo, $2.tipo);
-					$$.traducao = $1.traducao + $3.traducao + "\t" + 
-					$$.label + " = " + converter + $1.label + ";\n";
-
-					labelAux = $$.label;
-					$$.label = gentempcode();
-					addSimbolo($$.label, tipoAux, labelAux);
-					$$.traducao = $$.traducao + "\t"+
-					$$.label + " = " + labelAux + " / " + $3.label + ";\n";
-				}
-				else if($1.tipo == "float" & $3.tipo == "int"){
-					tipoAux = "float";
-					addSimbolo($$.label, tipoAux, $$.label);
-					converter = cast($1.tipo, $2.tipo);
-					$$.traducao = $1.traducao + $3.traducao + "\t" + 
-					$$.label + " = " + converter + $3.label + ";\n";
-
-					labelAux = $$.label;
-					$$.label = gentempcode();
-					addSimbolo($$.label, tipoAux, labelAux);
-					$$.traducao = $$.traducao + "\t"+
-					$$.label + " = " + $1.label + " / " + labelAux + ";\n";
-				}
 				else{
-					yyerror("Erro: Divisão inválida");
+					if($1.tipo == $3.tipo){
+						tipoAux = $1.tipo;
+											
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						$$.label + " = " + $1.label + " / " + $3.label + ";\n";
+						addSimbolo($$.label, tipoAux, $$.label);
+					}
+					else if($1.tipo == "int" & $3.tipo == "float"){
+						tipoAux = "float";
+						addSimbolo($$.label, tipoAux, $$.label);
+						converter = cast($1.tipo, $2.tipo);
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						$$.label + " = " + converter + $1.label + ";\n";
+
+						labelAux = $$.label;
+						$$.label = gentempcode();
+						addSimbolo($$.label, tipoAux, labelAux);
+						$$.traducao = $$.traducao + "\t"+
+						$$.label + " = " + labelAux + " / " + $3.label + ";\n";
+					}
+					else if($1.tipo == "float" & $3.tipo == "int"){
+						tipoAux = "float";
+						addSimbolo($$.label, tipoAux, $$.label);
+						converter = cast($1.tipo, $2.tipo);
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						$$.label + " = " + converter + $3.label + ";\n";
+
+						labelAux = $$.label;
+						$$.label = gentempcode();
+						addSimbolo($$.label, tipoAux, labelAux);
+						$$.traducao = $$.traducao + "\t"+
+						$$.label + " = " + $1.label + " / " + labelAux + ";\n";
+					}
+					else{
+						error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Divisão inválida\n";
+					}
 				}
 			}
 
@@ -1087,7 +1212,7 @@ E
 					addSimbolo($$.label, $1.tipo, $$.label);
 				}
 				else{
-					yyerror("Erro: Operação não permitida no tipo float");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Operação não permitida no tipo float\n";
 				}
 			}
 
@@ -1367,9 +1492,18 @@ E
 			{
 				TIPO_SIMBOLO var = getSimbolo($1.label);
 				
-				if (var.tipoVariavel != "float") yyerror("erro: A variável (" + var.tipoVariavel + " " + var.nomeVariavel + ") não pode receber o retorno float da função pow()");
+				if (var.tipoVariavel != "float") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variável (" + var.tipoVariavel + " " + var.nomeVariavel + ") não pode receber o retorno float do comando pow()\n";
 
-				$$.traducao = $1.traducao + $3.traducao + "\t" + var.tempVariavel + " = " + $3.label + ";\n";
+				else $$.traducao = $1.traducao + $3.traducao + "\t" + var.tempVariavel + " = " + $3.label + ";\n";
+			}
+
+			| TK_ID '=' SQRT
+			{
+				TIPO_SIMBOLO var = getSimbolo($1.label);
+				
+				if (var.tipoVariavel != "float") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variável (" + var.tipoVariavel + " " + var.nomeVariavel + ") não pode receber o retorno float do comando sqrt()\n";
+
+				else $$.traducao = $1.traducao + $3.traducao + "\t" + var.tempVariavel + " = " + $3.label + ";\n";
 			}
 						
 			| TK_ID '=' E
@@ -1450,7 +1584,7 @@ E
 					var.tempVariavel + " = " + $$.label + ";\n";
 				}
 				else{ 
-					yyerror("Erro: Atribuição inviavel");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Atribuição inviavel\n";
 				}
 			}
 
@@ -1485,7 +1619,7 @@ E
 				}
 				
 				else
-					yyerror("Erro Cast Inválido");
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Cast Inválido\n";
 			}
 
 			|TK_TIPO_INT '(' E ')'
@@ -1500,7 +1634,7 @@ E
 					$$.label + " = " + "(int) " + $3.label + ";\n";
 				}
 				
-				else yyerror("operacao invalida");
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Operacao invalida\n";
 			}
 
 			// IO
@@ -1667,7 +1801,7 @@ string cast(string tipo1, string tipo2){
 	if (tipo1 == "int" && tipo2 == "float" || tipo1 == "float" && tipo2 == "int")
 		return "(float) ";
 	
-	yyerror("erro: Casting inválido");
+	error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Casting inválido\n";
 	exit(0);
 }
 
@@ -1678,7 +1812,9 @@ bool comparaTipo(string tipo1, string tipo2){
 }
 
 void relacionalInvalida(string tipo1, string tipo2){
-	if (tipo1 == "char" || tipo2 == "char" || tipo1 == "bool" || tipo2 == "bool") yyerror("Erro: Relacional Inválido");
+	if (tipo1 == "char" || tipo2 == "char" || tipo1 == "bool" || tipo2 == "bool") {
+		error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Relacional Inválido\n";
+	}
 }
 
 void inicializaAscii(){
@@ -1760,16 +1896,16 @@ TIPO_LOOP getLaceBreak(){
 	int size = tabelaLoop.size();
 
 	if(size == 0){
-		yyerror("erro: comando continue/break fora de laco");
+		error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Comando continue/break fora de laco\n";
 	}
 
 	return tabelaLoop[size - 1];
 }
 
 
-void contadorDeLinha(){
-	var_linha_qnt++;
-	contLinha = std::to_string(var_linha_qnt);
+void contLinha(){
+	num_linha++;
+	linha_atual = std::to_string(num_linha);
 }
 
 void addFunc(string nome, string tipo){

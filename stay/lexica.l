@@ -18,7 +18,7 @@ ID {LETRA}({LETRA}|{NUM})*
 
 %%
 
-"\n"		{}
+"\n"		{ contLinha(); }
 
 {DELIM} 	{}
 
@@ -28,6 +28,7 @@ ID {LETRA}({LETRA}|{NUM})*
 "var"       { return TK_VAR; }
 
 "pow"       { return TK_POW; }
+"sqrt"      { return TK_SQRT; }
 
 "int"		{ return TK_TIPO_INT; }
 "float"		{ return TK_TIPO_FLOAT; }

@@ -1,9 +1,8 @@
-
 func main()
 {
-	var a float
-	a = pow(3, 6)	
+	var a float;
+	a = sqrt(9)
+	println(a)
 
-	print(a)
 }
 

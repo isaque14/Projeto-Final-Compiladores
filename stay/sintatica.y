@@ -126,7 +126,7 @@ void yyerror(string);
 
 %token TK_NUM TK_REAL TK_CHAR TK_STRING
 %token TK_MAIN TK_ID TK_VAR TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_BOOL TK_TIPO_CHAR TK_TIPO_STRING
-%token TK_MAIOR_IGUAL TK_MENOR_IGUAL TK_IGUAL_IGUAL TK_DIFERENTE TK_MAIS_MAIS TK_MENOS_MENOS TK_OU TK_E
+%token TK_MAIOR_IGUAL TK_DOIS_PTS_IGUAL TK_MENOR_IGUAL TK_IGUAL_IGUAL TK_DIFERENTE TK_MAIS_MAIS TK_MENOS_MENOS TK_OU TK_E
 %token TK_FUNC TK_RETURN TK_TIPO_VOID
 %token TK_INCREMENT
 %token TK_FIM TK_ERROR
@@ -656,7 +656,6 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 
 			| TK_VAR TK_ID TIPO '=' INICIALIZA_MULTI 
 			{
-				cout << "VAR " + $2.label << endl;
 				$$.tipo = $3.tipo;
 				bool encontrei = buscaVariavel($2.label); 
 				string temp = gentempcode();
@@ -762,6 +761,82 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				}
 
 				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Atribuição inválida para a variável (" + $2.label + ")\n";
+			}
+
+			| TK_VAR TK_ID TK_DOIS_PTS_IGUAL INICIALIZA_MULTI 
+			{
+				$$.tipo = $4.tipo;
+				bool encontrei = buscaVariavel($2.label); 
+				string temp = gentempcode();
+
+				if(encontrei)
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
+
+				
+				else if ($4.tipo == "string"){
+					addStr($2.label, "string", temp, $4.conteudo);
+					$$.traducao = $4.traducao + "\tstrcpy(" + temp + ", " + $4.label + ");\n"; 
+				}
+
+				else if($4.tipo == "bool"){ 	
+					addSimbolo($2.label, "bool", temp);
+					string val_bool;
+					
+					if ($4.label_bool == "True") val_bool = "1";
+					else val_bool = "0";
+
+					$$.traducao = "\t" + temp + " = " + val_bool + ";\n";
+					$$.label = "int " + $2.label + " = " + $4.label;
+				}
+
+				else if ($4.tipo != "string" && $4.tipo != "bool") {
+					addSimbolo($2.label, $4.tipo, temp);
+
+					$$.traducao = $4.traducao + "\t" + temp + " = " + $4.label + ";\n";
+					$$.label = $4.tipo + $2.label;
+				}
+
+				else error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Atribuição inválida para a variável (" + $2.label + ")\n";
+			}
+
+			| TK_VAR TK_ID
+			{
+				bool encontrei = buscaVariavel($2.label);
+							
+				if(encontrei)
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
+
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variável '" + $2.label + "' não pode ser inicializada sem um tipo.\n";
+			}
+
+			| TK_VAR TK_ID TK_DOIS_PTS_IGUAL 
+			{
+				bool encontrei = buscaVariavel($2.label);
+							
+				if(encontrei)
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
+
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variável '" + $2.label + "' não pode ser inicializada sem um valor após ':='.\n";
+			}
+
+			| TK_VAR TK_ID '=' INICIALIZA_MULTI
+			{
+				bool encontrei = buscaVariavel($2.label);
+							
+				if(encontrei)
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
+
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Não foi declarado um tipo para a variável '" + $2.label + "'.\n";
+			} 
+
+			| TK_VAR TK_ID TIPO TK_DOIS_PTS_IGUAL INICIALIZA_MULTI
+			{
+				bool encontrei = buscaVariavel($2.label);
+							
+				if(encontrei)
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variavel '" + $2.label + "' já foi declarada\n";
+
+				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A variável '" + $2.label + "' Declarada com o operador ':=' não dever ter tipo definido.\n";
 			}
 			;
 
@@ -1588,6 +1663,69 @@ E
 				}
 			}
 
+			| TK_ID '=' INICIALIZA
+			{
+				TIPO_SIMBOLO var = getSimbolo($1.label);
+
+				if(var.tipoVariavel == $3.tipo){
+					if (var.tipoVariavel == "string"){
+						$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
+					}
+	
+					else{
+						$$.traducao = $1.traducao + $3.traducao + "\t" + 
+						var.tempVariavel + " = " + $3.label + ";\n";
+					}
+				}
+				else if (var.tipoVariavel == "int" & $3.tipo == "float")
+				{
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = (int) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "float" & $3.tipo == "int")
+				{
+					$$.label = gentempcode();
+					addSimbolo($$.label, "float", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + 
+					$$.label + " = (float) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "char" & $3.tipo == "int"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (char) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "int" & $3.tipo == "char"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "int", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (int) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "float" & $3.tipo == "char"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "float", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (float) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else if (var.tipoVariavel == "char" & $3.tipo == "float"){
+					$$.label = gentempcode();
+					addSimbolo($$.label, "char", $$.label);
+					$$.traducao = $1.traducao + $3.traducao + "\t" +
+					$$.label + " = (char) " + $3.label + ";\n" + "\t" + 
+					var.tempVariavel + " = " + $$.label + ";\n";
+				}
+				else{ 
+					error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Atribuição inviavel\n";
+				}
+			}
+
 			| INICIALIZA
 			{
 				$$.tipo = $1.tipo;
@@ -1783,6 +1921,7 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 	{
 		for (int i = tabelaSimbolos.size() - 1; i >= 0; i--)
 		{
+			cout << tabelaSimbolos[i].nomeVariavel + " == " + variavel + "? \n";
 			if(tabelaSimbolos[i].nomeVariavel == variavel)
 			{
 				return tabelaSimbolos[i];
@@ -1791,8 +1930,7 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 		contexto--;
 		tabelaSimbolos = mapa[contexto];
 	}
-	cout << "Variavel " + variavel + " não declarada";
-	exit(0);
+	error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variavel (" + variavel + ") não declarada\n";
 }
 
 //Conversão implícita

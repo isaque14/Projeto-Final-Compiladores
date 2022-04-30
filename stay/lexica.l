@@ -68,6 +68,8 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "="		    { return *yytext; }
 
+":="        { return TK_DOIS_PTS_IGUAL; }
+
 ">="        { return TK_MAIOR_IGUAL; }
 
 "<="        { return TK_MENOR_IGUAL; }

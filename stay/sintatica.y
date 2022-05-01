@@ -151,7 +151,7 @@ void yyerror(string);
 S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 			{
 				if (error == ""){
-					cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n\n";
+					cout << "\n\n/*Compilador STAY*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n#include<cstring>\n\n";
 					
 					cout << atributos_fun << endl;
 
@@ -245,30 +245,12 @@ PARAMETROS_CHAMADA	: PARAMETRO
 						cout << "Nenhum PArametro\n";;
 					}
 
-PARAMETRO 	: TK_ID TK_TIPO_INT
+PARAMETRO 	: TK_ID TIPO
 			{
+				bool encontrei = buscaSimbolo($1.label);
+				// if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Função (" + $3.label + ") Não declarada" + "\n";
 				TIPO_SIMBOLO var = getSimbolo($1.label);
-				$$.traducao = $1.label + " int";
-			}
-
-			| TK_ID TK_TIPO_FLOAT
-			{
-				$$.traducao = $1.label + " float";
-			}
-
-			| TK_ID TK_TIPO_BOOL
-			{
-				$$.traducao = $1.label + " bool";
-			}
-
-			| TK_ID TK_TIPO_CHAR
-			{
-				$$.traducao = $1.label + " char";
-			}
-
-			| TK_ID TK_TIPO_STRING
-			{
-				$$.traducao = $1.label + " string";
+				$$.traducao = $1.label + $2.tipo;
 			}
 			;
 
@@ -302,25 +284,40 @@ DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
 					}
 					// else if ($2.tipo != $7.tipo && $2.tipo != "void") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + $7.tipo + "\n";
 					
-					else if($2.tipo == retorno.tipoVariavel){
+					else if ($2.tipo == retorno.tipoVariavel){
 						addFunc($3.label, $2.tipo);
 					
 						funcoes += $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\treturn " + retorno.tempVariavel + "\n}\n\n";
 						cabecalho_fun += $2.tipo + " " + $3.label + "(" + $5.traducao + ");\n";
 					}
+
+					else if ($2.tipo == "void" && !$7.temRetorno){
+						addFunc($3.label, $2.tipo);
+					
+						funcoes += $2.tipo + " " + $3.label + "(" + $5.traducao + ")\n" + "{\n" + $7.traducao + "\n}\n\n";
+						cabecalho_fun += $2.tipo + " " + $3.label + "(" + $5.traducao + ");\n";
+					}
+
 					else {
 						error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m A função (" + $2.tipo + " " + $3.label + ") Não pode retornar um " + retorno.tipoVariavel + ".\n";
 					}
 				}
 				;
 
-CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')' ';'
+CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')'
 				{
 					cout << "BUSCA Func Chamada\n";
 					// TIPO_FUNC aux = getFunc($1.label);
 					// $$.label = aux.nomeFunc;
 					// $$.tipo = aux.tipo;
 					// $$.traducao = aux.nomeFunc + "(" + $3.traducao + ")\n";
+				}
+
+				| TK_ID '(' ')'
+				{
+					TIPO_FUNC fun = getFunc($1.label);
+
+					$$.traducao = "\t" + fun.nomeFunc + "();\n";
 				}
 				;
 
@@ -390,6 +387,31 @@ RETORNO 	: TK_RETURN E ';'
 				error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Falta uma expressão após o comando (return)\n";
 			}
 			;
+
+TERNARIO 	: E '?' COMANDO ':' COMANDO
+			{
+				cout << "Reconhece Ternário\n";
+
+				if($1.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
+
+				else{
+					string temp = gentempcode();
+					$$.label = temp;
+					addSimbolo(temp, "bool", temp);
+					string jump = label_jump();
+					
+					addSimbolo(temp, "bool", temp);
+					string condicao = temp + " = !" + $1.label;
+
+					$$.traducao = $1.traducao + "\t" + condicao + ";\n INICIO_TERNARIO:\n" +
+					"\n\tif (" + temp + ") goto CONDICAO_2_" + jump + ";\n" +
+					$3.traducao + "\tgoto FIM_TERNARIO_" + jump + ";\n" +
+					"CONDICAO_2_" + jump + ":\n\n" +
+					$5.traducao + "\nFIM_TERNARIO_" + jump + ":\n\n";
+				}
+			}
+			;
+
 
 COMANDOS	: COMANDO COMANDOS
 			{
@@ -976,12 +998,32 @@ COMANDO 	: E ';'
 
 			| E
 
+			| TERNARIO
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| TERNARIO ';'
+			{
+				$$.traducao = $1.traducao;
+			}
+
 			| DECLARA_VAR 
 			{
 				$$.traducao = $1.traducao;
 			}
 
 			| DECLARA_VAR ';' 
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| CHAMA_FUNCAO
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| CHAMA_FUNCAO ';'
 			{
 				$$.traducao = $1.traducao;
 			}
@@ -1859,15 +1901,15 @@ E
 	
 			| TK_ID
 			{
-				// bool encontrei = buscaVariavel($1.label);
-				// if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + ") Já Declarada.\n";
+				bool encontrei = buscaVariavel($1.label);
+				if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + ") Não Declarada.\n";
 
-				// else{
+				else{
 					TIPO_SIMBOLO variavel = getSimbolo($1.label);	
 					$$.tipo = variavel.tipoVariavel;
 					$$.label = variavel.tempVariavel;
 					$$.temp = $$.label;
-				// }
+				}
 			}
 
 			//CONVERSÃO EXPLÍCITA
@@ -2077,6 +2119,7 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 		contexto--;
 		tabelaSimbolos = mapa[contexto];
 	}
+	exit(0);
 	/* error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variavel (" + variavel + ") não declarada\n"; */
 }
 
@@ -2089,6 +2132,7 @@ TIPO_SIMBOLO getRetorno(string retorno){
 			return tabelaVarFunc[i];
 		}				
 	}
+	exit(0);
 }
 
 bool buscaRetorno(string retorno){
@@ -2235,7 +2279,7 @@ TIPO_FUNC getFunc(string func){
 		}				
 	}
 	
-	cout << "Função " + func + " não declarada";
+	error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Função (" + func + ") Função não Declarada" + "\n";
 	exit(0);
 }
 

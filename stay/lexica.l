@@ -66,6 +66,10 @@ ID {LETRA}({LETRA}|{NUM})*
 
 ","         { return *yytext; }
 
+":"         { return *yytext; }
+
+"?"         { return *yytext; }
+
 "="		    { return *yytext; }
 
 ":="        { return TK_DOIS_PTS_IGUAL; }

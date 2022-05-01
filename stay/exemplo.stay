@@ -1,11 +1,8 @@
 
-func int soma (a int, num int, msg string){
-	println(msg);
-	return num + a;
-}
 
 func main()
 {
-
+	var num := 15
+	num > 10 ? println("true") : println("false");
 }
 

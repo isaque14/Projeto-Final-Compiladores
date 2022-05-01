@@ -1,7 +1,11 @@
+
+func int soma (a int, num int, msg string){
+	println(msg);
+	return num + a;
+}
+
 func main()
 {
-	var a int := 8
-
 
 }
 

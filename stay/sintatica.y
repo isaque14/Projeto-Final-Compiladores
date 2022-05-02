@@ -137,6 +137,7 @@ void yyerror(string);
 %token TK_FUNC TK_RETURN TK_TIPO_VOID
 %token TK_INCREMENT
 %token TK_FIM TK_ERROR
+%token TK_COMENTARIO
 %token TK_TRUE TK_FALSE
 %token TK_PRINTLN TK_PRINT TK_SCAN
 %token TK_IF TK_ELSE TK_ELSE_IF TK_WHILE TK_FOR TK_DO TK_BREAK TK_CONTINUE
@@ -165,7 +166,7 @@ S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 
 					cout << funcoes << endl;
 				}
-				else yyerror(error); 
+				else yyerror(error);  
 			}
 			;
 
@@ -229,7 +230,7 @@ ATRIBUTO 	: TK_ID TIPO
 			}
 			;
 
-PARAMETROS_CHAMADA	: PARAMETRO
+/*PARAMETROS_CHAMADA	: PARAMETRO
 					{
 						cout << "Um parâmetro\n";
 						$$.traducao = $1.traducao;
@@ -253,6 +254,7 @@ PARAMETRO 	: TK_ID TIPO
 				$$.traducao = $1.label + $2.tipo;
 			}
 			;
+*/
 
 FUNCOES 	: DECLARA_FUNCAO FUNCOES
 			
@@ -605,6 +607,15 @@ INICIALIZA 	: TK_NUM
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 
+			| '-' TK_NUM
+			{
+				$$.tipo = "int";
+				$$.conteudo = $2.label;
+				$$.label = gentempcode();
+				addSimbolo($$.label, $$.tipo, $$.label);
+				$$.traducao = "\t" + $$.label + " = -" + $2.label + ";\n";
+			}
+
 			| TK_REAL
 			{
 				$$.tipo = "float";
@@ -612,6 +623,16 @@ INICIALIZA 	: TK_NUM
 				$$.label = gentempcode();
 				addSimbolo($$.label, $$.tipo, $$.label);
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+			
+			}
+
+			| '-' TK_REAL
+			{
+				$$.tipo = "float";
+				$$.conteudo = $2.label;
+				$$.label = gentempcode();
+				addSimbolo($$.label, $$.tipo, $$.label);
+				$$.traducao = "\t" + $$.label + " = -" + $2.label + ";\n";
 			
 			}
 
@@ -1429,26 +1450,26 @@ E
 
 			| TK_ID TK_MAIS_MAIS
 			{
-				bool encontrei = buscaVariavel($1.label);
-				if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + "Não declarada.\n";
+				// bool encontrei = buscaVariavel($1.label);
+				// if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + ") Não declarada. //TK_ID TK_MAIS_MAIS\n";
 
-				else{
+				// else{
 					TIPO_SIMBOLO var1 = getSimbolo($1.label);
 					$$.traducao = $1.traducao + $2.traducao + "\t" + 
 					var1.tempVariavel + " = " + var1.tempVariavel + " + 1" + ";\n";
-				}
+				// }
 			}
 
 			| TK_ID TK_MENOS_MENOS
 			{
-				bool encontrei = buscaVariavel($1.label);
-				if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + "Não declarada.\n";
+				// bool encontrei = buscaVariavel($1.label);
+				// if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + "Não declarada.\n";
 
-				else {
+				// else {
 					TIPO_SIMBOLO var1 = getSimbolo($1.label);
 					$$.traducao = $1.traducao + $2.traducao + "\t" + 
 					var1.tempVariavel + " = " + var1.tempVariavel + " - 1" + ";\n";
-				}
+				// }
 			}
 
 			//OPERADORES RELACIONAIS
@@ -1739,7 +1760,7 @@ E
 			{
 				bool encontrei = buscaVariavel($1.label);
 				bool busca_fun = buscaRetorno($1.label);
-				if (!encontrei && !busca_fun) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + "Não declarada.\n";
+				if (!encontrei && !busca_fun) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável(" + $1.label + "Não declarada.\n";
 
 				else{
 					TIPO_SIMBOLO var = getSimbolo($1.label);
@@ -1763,7 +1784,7 @@ E
 					if(var.tipoVariavel == $3.tipo){
 						if (var.tipoVariavel == "string"){
 							// cout << "$3.traducao no = " + $3.traducao << endl;
-							$$.traducao = $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
+							$$.traducao = $1.traducao + $3.traducao + "\tstrcpy(" + var.tempVariavel + ", " + $3.label + ");\n"; 
 						}
 		
 						else{
@@ -1901,15 +1922,15 @@ E
 	
 			| TK_ID
 			{
-				bool encontrei = buscaVariavel($1.label);
-				if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável (" + $1.label + ") Não Declarada.\n";
+				// bool encontrei = buscaVariavel($1.label);
+				// if (!encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variável #####(" + $1.label + ") Não Declarada.\n";
 
-				else{
+				// else{
 					TIPO_SIMBOLO variavel = getSimbolo($1.label);	
 					$$.tipo = variavel.tipoVariavel;
 					$$.label = variavel.tempVariavel;
 					$$.temp = $$.label;
-				}
+				// }
 			}
 
 			//CONVERSÃO EXPLÍCITA
@@ -2119,8 +2140,10 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 		contexto--;
 		tabelaSimbolos = mapa[contexto];
 	}
+	
+	yyerror("\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variavel *(" + variavel + ")* não declarada\n");
 	exit(0);
-	/* error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Variavel (" + variavel + ") não declarada\n"; */
+	
 }
 
 TIPO_SIMBOLO getRetorno(string retorno){

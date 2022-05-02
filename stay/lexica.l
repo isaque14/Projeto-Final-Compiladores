@@ -70,6 +70,8 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "?"         { return *yytext; }
 
+"-"         { return *yytext; }
+
 "="		    { return *yytext; }
 
 ":="        { return TK_DOIS_PTS_IGUAL; }
@@ -89,6 +91,8 @@ ID {LETRA}({LETRA}|{NUM})*
 "||"        { return TK_OU; }
 
 "&&"        { return TK_E; }
+
+"//"        { return TK_COMENTARIO; }
 
 
 

@@ -1,0 +1,195 @@
+
+******* Declaração de Variáveis ****** 
+	func main()
+	{
+		var a int;
+		var b float = 15.6;
+		var c float = -16.88; // Inicialização com valores negativos
+		var d char = 'Z';
+		var e bool = True;
+		var f string = "Isaque";
+		var g := 7; // Inferência de Tipo
+	}
+	
+	***** DECLARAÇÃO VETORES *******
+	func main()
+	{
+		var h[] int = 2, 6, 8, 1;
+		var i[4] float = 1.2, 2.1, 4.3;
+	}
+	
+	***** ESCOPO GLOBAL *****
+	var global int = 9;
+
+	func main()
+	{
+		print(global);
+	}
+
+
+	 **** CONTEXTO ****
+	func main()
+	{
+		var a int = 0
+
+		while a < 10 {
+			var b int = 26;
+			a++;
+		}
+
+		b = 1;
+	}
+
+	
+	***** CONCATENAÇÃO DE STRINGS *****
+	func main()
+	{
+		var name string = "Isaque";
+		var last_name string = "_Diniz";
+
+		var full_name string; 
+		full_name = name + last_name;
+
+		println(full_name);
+	}
+
+	
+	**** BREAK ****
+	func main()
+	{
+		var i int;
+
+		for i = 0; i < 10; i++{
+			if i > 5{
+				break;
+			}
+			println(i);
+		}
+	}
+
+
+	**** CONTINUE *****
+	func main()
+	{
+		var i int;
+
+		for i = 0; i < 10; i++{
+			if i < 5{
+				continue;
+			}
+			println(i);
+		}
+	}
+
+
+	****** IO *******
+	func main()
+	{	
+		var a int;
+
+		scan(&a);
+		print("valor de a = ");
+		println(a);
+	}
+	
+
+	****** POTÊNCIA *******
+	func main()
+	{
+		var pot float; 
+
+		pot = pow(3, 2);
+
+		print("Valor da potencia = ");
+		println(pot);
+	}
+	
+
+	***** RAIZ ******
+	func main()
+	{
+		var raiz float;
+
+		raiz = sqrt(9);
+
+		print("Valor da raiz = ");
+		println(raiz);
+	}
+	
+
+	****** OPERADOR TERNÁRIO ********
+	func main()
+	{
+		var num := 15
+		num > 10 ? println("true") : println("false");
+	}
+	
+
+	******* DECLARAÇÃO E CHAMADA DEFUNÇÕES ********
+	func int soma (a int, num int, msg string){
+		println(msg);
+		return num + a;
+	}
+	
+	func void status(){
+		println("OK");
+	}
+	
+	func main()
+	{
+		status();
+	
+	}
+	
+
+	********* CONTROLE DE ERROS *********
+
+	// não aceita variaveis repetidas
+	func main(){
+		var a int;
+		var a float;
+	}
+
+	// Não aceita divisão por zero 
+	func main()
+	{
+		var a int = 1;
+		a = a/0;
+	}
+
+	// Vetor com excesso de elementos 
+	func main()
+	{
+		var vet[3] int = 1,2,3,4,5;
+	}
+
+	// Retorno indevido de Funções 
+	func int soma (a float, num int, msg string){
+		println(msg);
+		return a + 1.7;
+	}
+	
+	func void status(){
+		return "ok";
+	}
+	
+	func main()
+	{
+	
+	}
+
+	// Não permite funções como mesmo nome 
+	func void status(){
+		println("ok");
+	}
+	
+	func void status(){
+		println("status");
+	}
+	
+	func main()
+	{
+	
+	}
+
+

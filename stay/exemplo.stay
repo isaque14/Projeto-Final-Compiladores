@@ -1,8 +1,0 @@
-
-
-func main()
-{
-	var num := 15
-	num > 10 ? println("true") : println("false");
-}
-

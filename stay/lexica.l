@@ -13,6 +13,7 @@ NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{DIGITO}|{SIMBOLO})\' 
 STRING \"(({LETRA}*|{DIGITO}*|{SIMBOLO}*))*\"
+TEXTO (({LETRA}*|{DIGITO}*|{SIMBOLO}*))*
 ID {LETRA}({LETRA}|{NUM})*
 
 

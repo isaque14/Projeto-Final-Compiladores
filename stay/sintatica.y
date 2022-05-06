@@ -170,6 +170,11 @@ S 			: COMANDOS TK_MAIN '(' ')' BLOCO
 			}
 			;
 
+COMENTARIO 	: TK_COMENTARIO COMANDO
+			{
+				$$.traducao = "//" + $2.traducao; 
+			}
+
 BLOCO		: '{' COMANDOS '}'
 			{
 				$$.traducao = $2.traducao;
@@ -1018,6 +1023,16 @@ CONTROLE_LACO	: TK_BREAK
 COMANDO 	: E ';'
 
 			| E
+
+			| COMENTARIO
+			{
+				$$.traducao = $1.traducao;
+			}
+
+			| COMENTARIO ';'
+			{
+				$$.traducao = $1.traducao;
+			}
 
 			| TERNARIO
 			{

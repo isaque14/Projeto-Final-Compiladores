@@ -225,7 +225,6 @@ ATRIBUTOS 	: ATRIBUTO
 
 ATRIBUTO 	: TK_ID TIPO 
 			{	
-				cout << "ADD LABEL = " + $1.label << endl;
 				string temp = gentempcode();
 				addVarFunc($1.label, $2.tipo, temp);
 
@@ -270,14 +269,6 @@ DECLARA_FUNCAO 	: TK_FUNC TIPO TK_ID '(' ATRIBUTOS ')' BLOCO
 				{
 					TIPO_SIMBOLO retorno = $7.varRetorno;
 					bool encontrei = buscaFunc($3.label);
-					cout << "***VAR de FUNC***\n" + atributos_fun;
-					cout << "***\n\n VARIAVEIS DO PROGRAMA ***\n" + declaracoes;
-					cout << "\n\n**TESTE BLOCO**\n " + $7.traducao;
-
-					cout << "\n\n *** COMPARACAO DE VARIAVEIS *** \n\t" + $2.tipo + " == " + retorno.tipoVariavel + "?\n";
-
-					cout << "\n\n 	*** VARIAVEL RETORNADA ***\n" + retorno.tipoVariavel + " " + retorno.nomeVariavel + "..." << endl;
-
 					
 					if(encontrei) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Função (" + $3.label + ") Já declarada" + "\n";
 
@@ -331,7 +322,6 @@ CHAMA_FUNCAO	: TK_ID '(' ATRIBUTOS ')'
 RETORNO 	: TK_RETURN E ';'
 			{
 				TIPO_SIMBOLO var_retorno = getSimbolo($2.label);
-				cout << "TA retornando -> " + var_retorno.tipoVariavel + " " + var_retorno.nomeVariavel << endl;
 				$$.tipo = $2.tipo;
 				$$.temRetorno = true;
 				$$.label = "return";
@@ -342,7 +332,6 @@ RETORNO 	: TK_RETURN E ';'
 			| TK_RETURN E 
 			{
 				TIPO_SIMBOLO var_retorno = getSimbolo($2.label);
-				cout << "TA retornando -> " + var_retorno.tipoVariavel + " " + var_retorno.nomeVariavel << endl;
 				$$.tipo = $2.tipo;
 				$$.temRetorno = true;
 				$$.label = "return";
@@ -357,7 +346,6 @@ RETORNO 	: TK_RETURN E ';'
 
 				else {
 					TIPO_SIMBOLO var_retorno = getSimbolo($2.label);
-					cout << "TA retornando -> " + var_retorno.tipoVariavel + " " + var_retorno.nomeVariavel << endl;
 					$$.tipo = $2.tipo;
 					$$.temRetorno = true;
 					$$.label = "return";
@@ -373,7 +361,6 @@ RETORNO 	: TK_RETURN E ';'
 
 				else{
 					TIPO_SIMBOLO var_retorno = getSimbolo($2.label);
-					cout << "TA retornando -> " + var_retorno.tipoVariavel + " " + var_retorno.nomeVariavel << endl;
 					$$.tipo = $2.tipo;
 					$$.temRetorno = true;
 					$$.label = "return";
@@ -397,8 +384,6 @@ RETORNO 	: TK_RETURN E ';'
 
 TERNARIO 	: E '?' COMANDO ':' COMANDO
 			{
-				cout << "Reconhece Ternário\n";
-
 				if($1.tipo != "bool") error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m O condicinal do loop deve ser um boolean\n";
 
 				else{
@@ -592,7 +577,6 @@ INICIALIZA_MULTI 	: INICIALIZA
 					{
 						num_elementos_iniciados++;
 						int tam = $1.numElementos + $3.numElementos;
-						cout << "TAM EL " + std::to_string(tam) << endl; 
 						if ($1.tipo != $3.tipo) error += "\033[1;31mError\033[0m - \033[1;36mLinha " + linha_atual + ":\033[0m\033[1;39m Um vetor não pode receber tipos diferentes\n";
 
 						else{
@@ -840,7 +824,6 @@ DECLARA_VAR : TK_VAR TK_ID TIPO
 				}
 
 				else if ($3.tipo == "int"){
-					cout << "primeiro é inteiro\n";
 					if ($5.tipo == "float"){
 						cout << "segundo é float\n";
 						addSimbolo($2.label, "int", temp);
@@ -2144,10 +2127,8 @@ TIPO_SIMBOLO getSimbolo(string variavel){
 	{
 		for (int i = tabelaSimbolos.size() - 1; i >= 0; i--)
 		{
-			cout << tabelaSimbolos[i].nomeVariavel + " == " + variavel + "? \n";
 			if(tabelaSimbolos[i].nomeVariavel == variavel)
 			{
-				cout << "To retornando!!!\n";
 				cout << tabelaSimbolos[i].tipoVariavel + " " + tabelaSimbolos[i].nomeVariavel + " " + tabelaSimbolos[i].tempVariavel << endl;
 				return tabelaSimbolos[i];
 			}				
@@ -2323,10 +2304,7 @@ TIPO_FUNC getFunc(string func){
 
 bool buscaFunc(string func){
 	for (int i = tabelaFunc.size() - 1; i >= 0; i--)
-	{
-
-		cout << tabelaFunc[i].nomeFunc + " == " + func + " ?\n";
-		
+	{	
 		if(tabelaFunc[i].nomeFunc == func)
 		{
 			return true;

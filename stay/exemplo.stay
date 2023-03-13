@@ -1,13 +1,11 @@
-func int soma (a float, num int, msg string){
-		println(msg);
-		return a + 1.7;
-	}
-	
-	func void status(){
-		return "ok";
-	}
-	
-	func main()
+func main()
 	{
-	
+		var i int;
+
+		for i = 0; i < 10; i++{
+			if i < 5{
+				continue;
+			}
+			println(i);
+		}
 	}

@@ -1,3 +1,13 @@
-func main(){
-    // var a int;
-}
+func int soma (a float, num int, msg string){
+		println(msg);
+		return a + 1.7;
+	}
+	
+	func void status(){
+		return "ok";
+	}
+	
+	func main()
+	{
+	
+	}

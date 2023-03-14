@@ -17,10 +17,10 @@
 ## Utilização do Compilador
 ### Instalação das ferramentas   
 - Para utilizar o compilador criado nesse projeto será necessário a instalação das ferramentas citadas acima, isso pode ser feito utilizando o Sistema Linux ou o WSL no Windows utilizando os comandos abaixo.
--- 1° sudo apt install g++
--- 2° sudo apt install make
--- 3° sudo apt install flex
--- 4° sudo apt install bison
+- 1° sudo apt install g++
+- 2° sudo apt install make
+- 3° sudo apt install flex
+- 4° sudo apt install bison
 
 ### Rodando um exemplo no compilador 
 - Para executar um exemplo de código na linguagem Stay e ver o resultado do compilador em c++, basta escrever o código que deseja compilar no arquivo exemplo.stay, e no terminal executar o comando "make". 
@@ -76,6 +76,8 @@ var global int = 9;
 ```
 
 #### Contexto
+```
+
 func main()
 	{
 		var a int = 0
@@ -88,7 +90,10 @@ func main()
 		b = 1;
 	}
 
+```
 #### Concatenação de Strings
+```
+
 func main()
 	{
 		var name string = "Isaque";
@@ -100,7 +105,11 @@ func main()
 		println(full_name);
 	}
 
+```
+
 #### Comando Break
+```
+
 func main()
 	{
 		var i int;
@@ -113,7 +122,10 @@ func main()
 		}
 	}
 
+```
 #### Comando Continue
+```
+
 func main()
 	{
 		var i int;
@@ -126,7 +138,10 @@ func main()
 		}
 	}
 
+```
 #### Input e Output (I/O)
+```
+
 func main()
 	{	
 		var a int;
@@ -136,7 +151,10 @@ func main()
 		println(a);
 	}
 
+```
 #### Função de Potenciação
+```
+
 func main()
 	{
 		var pot float; 
@@ -147,7 +165,10 @@ func main()
 		println(pot);
 	}
 
+```
 #### Função de Raiz Quadrada
+```
+
 func main()
 	{
 		var raiz float;
@@ -158,14 +179,20 @@ func main()
 		println(raiz);
 	}
 
+```
 #### Operador Ternário 
+```
+
 func main()
 	{
 		var num := 15
 		num > 10 ? println("true") : println("false");
 	}
 
+```
 #### Declaração e Chamada de Funções 
+```
+
     func int soma (a int, num int, msg string){
 		println(msg);
 		return num + a;
@@ -180,28 +207,40 @@ func main()
 		status();
 	}      
 
+```
 ### Controle de Erros 
 
 #### Não aceita variáveis repetidas 
+```
+
 func main(){
 		var a int;
 		var a float;
 	}
 
+```
 #### Não aceita divisão por zero
+```
+
 func main()
 	{
 		var a int = 1;
 		a = a/0;
 	}
 
+```
 #### Não aceita vetores com elementos acima do valor estipulado
+```
+
 func main()
 	{
 		var vet[3] int = 1,2,3,4,5;
 	}
 
+```
 #### Controle do tipo de retorno de uma função
+```
+
 func int soma (a float, num int, msg string){
 		println(msg);
 		return a + 1.7;
@@ -216,6 +255,7 @@ func int soma (a float, num int, msg string){
 	
 	}
 
+```
 ## Responsável pelo Projeto: Isaque Diniz da Silva
 #### Redes Sociais
 [Linkedin](https://www.linkedin.com/in/isaque-diniz-da-silva-a0773459/)

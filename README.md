@@ -17,22 +17,28 @@
 ## Utilização do Compilador
 ### Instalação das ferramentas   
 - Para utilizar o compilador criado nesse projeto será necessário a instalação das ferramentas citadas acima, isso pode ser feito utilizando o Sistema Linux ou o WSL no Windows utilizando os comandos abaixo.
-1° sudo apt install g++
-2° sudo apt install make
-3° sudo apt install flex
-4° sudo apt install bison
+-- 1° sudo apt install g++
+-- 2° sudo apt install make
+-- 3° sudo apt install flex
+-- 4° sudo apt install bison
 
 ### Rodando um exemplo no compilador 
 - Para executar um exemplo de código na linguagem Stay e ver o resultado do compilador em c++, basta escrever o código que deseja compilar no arquivo exemplo.stay, e no terminal executar o comando "make". 
 OBS.: Todos os códigos na linguagem stay devem conter a classe principal main: 
+```
+
 func main()
 {
     // Seu código aqui
 }
 
+```
 Veja agora alguns exemplos de códigos escritos em Stay que podem ser compilador para C++ com esta ferramenta.
 
 #### Instanciando variáveis 
+
+```
+
 func main()
 	{
 		var a int;
@@ -44,20 +50,30 @@ func main()
 		var g := 7; 
     }
 
+```
+
 #### Declaração de Vetores
+```
+
 func main()
 	{
 		var h[] int = 2, 6, 8, 1;
 		var i[4] float = 1.2, 2.1, 4.3;
 	}
 
+```
+
 #### Váriáveis de Escopo Global
+```
+
 var global int = 9;
 
 	func main()
 	{
 		print(global);
 	}
+
+```
 
 #### Contexto
 func main()
